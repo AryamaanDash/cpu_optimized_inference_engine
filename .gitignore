@@ -1,1 +1,91 @@
+# Local mentoring roadmap
 /ROADMAP.md
+
+# CMake build trees (Debug, Release, sanitizer, and benchmark configurations)
+/build/
+/build-*/
+/cmake-build-*/
+/out/build/
+/out/install/
+
+# Generated CMake / CTest / Ninja files, including accidental in-source builds
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+install_manifest.txt
+compile_commands.json
+CMakeUserPresets.json
+build.ninja
+rules.ninja
+.ninja_deps
+.ninja_log
+# Keep CMakePresets.json and any hand-written Makefile versioned.
+
+# Compiled objects, libraries, executables, and debug symbols
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.dSYM/
+/a.out
+/inference_demo
+
+# Coverage and compiler profiling output
+*.gcda
+*.gcno
+*.gcov
+*.profraw
+*.profdata
+/coverage/
+
+# Instruments recordings and local performance experiment output
+*.trace
+/benchmark-results/local/
+/profiles/local/
+# Keep curated benchmark results, methodology, and reference data versioned.
+# Do not blanket-ignore JSON, CSV, model files, or logs.
+
+# Python reference tests, analysis scripts, and notebooks
+__pycache__/
+*.pyc
+*.pyo
+/.venv/
+/venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.coverage
+.coverage.*
+htmlcov/
+
+# Editor-local state (keep shared VS Code configuration versioned)
+/.vscode/.browse.VC.db*
+/.vscode/ipch/
+/.cache/clangd/
+/.idea/
+*.xcuserstate
+xcuserdata/
+DerivedData/
+*.swp
+*.swo
+*~
+
+# Local environment configuration; example files may be committed
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# macOS metadata
+.DS_Store
+._*
+.AppleDouble/
+.LSOverride
