@@ -9,6 +9,14 @@ class Matrix {
 public:
     Matrix(std::size_t rows, std::size_t cols);
 
+//copy constructor & assignment
+    Matrix(const Matrix& other) = default;
+    Matrix& operator=(const Matrix& other) = default;
+
+// move semantics
+    Matrix(Matrix&& other) noexcept;
+    Matrix& operator=(Matrix&& other) noexcept;
+
 // getters for rows and cols
     std::size_t rows() const noexcept;
     std::size_t cols() const noexcept;
@@ -17,6 +25,7 @@ public:
     float& operator()(std::size_t row, std::size_t col);
     const float& operator()(std::size_t row, std::size_t col) const;
 
+// returns read only & mutable version of matrix
     float* data() noexcept;
     const float* data() const noexcept;
 
@@ -25,19 +34,6 @@ private:
     std::size_t cols_;
     std::vector<float> data_;
 };
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 #endif // MATRIX_HPP
