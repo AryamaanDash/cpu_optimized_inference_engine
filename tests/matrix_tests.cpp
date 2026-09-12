@@ -9,6 +9,7 @@
 #include <limits>
 #include <random>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -46,22 +47,39 @@ bool nearly_equal(double actual, double expected, double atol, double rtol){
   return std::abs(actual - expected) <= atol + rtol * std::abs(expected);
 }
 
-void check_matrix_close(const Matrix& actual, const Matrix& expected, double atol, double rtol){
-  check(actual.rows() == expected.rows() && actual.cols() == expected.cols(),
-      "Matrix dimensions do not match.");
-
-  for(std::size_t row = 0; row < actual.rows(); ++row){
-    for(std::size_t col = 0; col < actual.cols(); ++col){
-      if(!nearly_equal(actual(row, col), expected(row, col),
-                        atol, rtol)){
+void check_matrix_close(const Matrix& actual, const Matrix& expected, double atol, double rtol) {
+    if (actual.rows() != expected.rows() || actual.cols() != expected.cols()) {
         std::ostringstream message;
-        message.precision(17);
-        message << "Matrix mismatch at (" << row << ", " << col << "): actual=" << actual(row, col) << ", expected=" << expected(row, col) << ", atol=" << atol << ", rtol=" << rtol;
-
+        message << "Matrix dimensions do not match: actual_shape="
+                << actual.rows() << 'x' << actual.cols()
+                << ", expected_shape=" << expected.rows() << 'x' << expected.cols();
         throw std::runtime_error(message.str());
-      }
     }
-  }
+
+    for (std::size_t row = 0; row < actual.rows(); ++row) {
+        for (std::size_t col = 0; col < actual.cols(); ++col) {
+            const double actual_value = actual(row, col);
+            const double expected_value = expected(row, col);
+            if (!nearly_equal(actual_value, expected_value, atol, rtol)) {
+                std::ostringstream message;
+                message.precision(17);
+                message << "Matrix mismatch at (" << row << ", " << col
+                        << "): actual_shape=" << actual.rows() << 'x' << actual.cols()
+                        << ", expected_shape=" << expected.rows() << 'x' << expected.cols()
+                        << ", actual=" << actual_value << ", expected=" << expected_value
+                        << ", atol=" << atol << ", rtol=" << rtol;
+                if (std::isfinite(actual_value) && std::isfinite(expected_value)) {
+                    message << ", absolute_error=" << std::abs(actual_value - expected_value)
+                            << ", allowed_error=" << atol + rtol * std::abs(expected_value);
+                } else {
+                    // Numerical error is not meaningful for unexpected NaN/infinity.
+                    message << ", nonfinite value rejected"
+                            << ", absolute_error=not applicable, allowed_error=not applicable";
+                }
+                throw std::runtime_error(message.str());
+            }
+        }
+    }
 }
 
 template <typename Exception, typename Function>
@@ -102,12 +120,72 @@ void matrix_comparison() {
         [&] { check_matrix_close(wrong_shape, expected, 1e-5, 1e-5); },
         "Comparison accepted different dimensions");
 
-    // Unexpected NaN must be rejected.
-    actual = expected;
-    actual(0, 0) = std::numeric_limits<float>::quiet_NaN();
-    expect_throw<std::runtime_error>(
-        [&] { check_matrix_close(actual, expected, 1e-5, 1e-5); },
-        "Comparison accepted NaN");
+}
+
+void comparison_tolerances() {
+    check(nearly_equal(-2.0, -2.0, 0.0, 0.0), "Exact finite equality failed");
+    // Binary fractions make the inclusive boundary checks exactly representable.
+    check(nearly_equal(0.125, 0.0, 0.125, 0.0), "Absolute tolerance boundary failed");
+    check(!nearly_equal(0.25, 0.0, 0.125, 0.0), "Absolute tolerance accepted excessive error");
+    check(nearly_equal(9.0, 8.0, 0.0, 0.125), "Relative tolerance boundary failed");
+    check(!nearly_equal(9.25, 8.0, 0.0, 0.125), "Relative tolerance accepted excessive error");
+    check(nearly_equal(-9.0, -8.0, 0.0, 0.125), "Relative tolerance failed for negative values");
+    check(nearly_equal(9.25, 8.0, 0.25, 0.125), "Combined tolerance boundary failed");
+    check(!nearly_equal(9.5, 8.0, 0.25, 0.125), "Combined tolerance accepted excessive error");
+}
+
+void matrix_comparison_nonfinite() {
+    const Matrix finite(2, 3);
+    for (const float value : {std::numeric_limits<float>::quiet_NaN(),
+                             std::numeric_limits<float>::infinity(),
+                             -std::numeric_limits<float>::infinity()}) {
+        Matrix nonfinite = finite;
+        nonfinite(1, 2) = value;
+        expect_throw<std::runtime_error>(
+            [&] { check_matrix_close(nonfinite, finite, 1e-5, 1e-5); },
+            "Comparison accepted nonfinite actual value");
+        expect_throw<std::runtime_error>(
+            [&] { check_matrix_close(finite, nonfinite, 1e-5, 1e-5); },
+            "Comparison accepted nonfinite expected value");
+        // Even matching infinities must fail the finite-only comparison contract.
+        expect_throw<std::runtime_error>(
+            [&] { check_matrix_close(nonfinite, nonfinite, 1e-5, 1e-5); },
+            "Comparison accepted matching nonfinite values");
+    }
+}
+
+void matrix_comparison_diagnostics() {
+    const auto failure_message = [](const Matrix& actual, const Matrix& expected) {
+        try {
+            check_matrix_close(actual, expected, 0.125, 0.25);
+        } catch (const std::runtime_error& error) {
+            return std::string(error.what());
+        }
+        throw std::runtime_error("Expected comparison failure for diagnostic check");
+    };
+
+    const std::string shape_message = failure_message(Matrix(3, 2), Matrix(2, 3));
+    check(shape_message.find("actual_shape=3x2") != std::string::npos,
+          "Shape diagnostic omitted actual dimensions");
+    check(shape_message.find("expected_shape=2x3") != std::string::npos,
+          "Shape diagnostic omitted expected dimensions");
+
+    Matrix expected(2, 3);
+    expected(1, 2) = -2.0f;
+    Matrix actual = expected;
+    actual(1, 2) = -3.0f;
+    const std::string value_message = failure_message(actual, expected);
+    for (const char* detail : {"(1, 2)", "actual_shape=2x3", "expected_shape=2x3",
+                               "actual=-3", "expected=-2", "atol=0.125", "rtol=0.25",
+                               "absolute_error=1", "allowed_error=0.625"}) {
+        check(value_message.find(detail) != std::string::npos,
+              "Value diagnostic omitted comparison context or numerical error");
+    }
+
+    actual(1, 2) = std::numeric_limits<float>::infinity();
+    const std::string nonfinite_message = failure_message(actual, expected);
+    check(nonfinite_message.find("nonfinite value rejected") != std::string::npos,
+          "Nonfinite diagnostic did not explain rejection");
 }
 
 void construction() {
@@ -549,6 +627,9 @@ int main() {
         {"matmul incompatible shapes", matmul_incompatible_shapes},
         {"matmul_zero_inner_dimension", matmul_zero_inner_dimension},
         {"matrix comparison helper", matrix_comparison},
+        {"comparison absolute and relative tolerance boundaries", comparison_tolerances},
+        {"matrix comparison rejects nonfinite values", matrix_comparison_nonfinite},
+        {"matrix comparison failure diagnostics", matrix_comparison_diagnostics},
         {"matmul rectangular output", matmul_rectangular_output},
         {"matmul scalar", matmul_scalar},
         {"matmul dot product", matmul_dot_product},
