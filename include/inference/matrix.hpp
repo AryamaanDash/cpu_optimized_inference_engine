@@ -11,7 +11,8 @@ public:
 
 //copy constructor & assignment
     Matrix(const Matrix& other) = default;
-    Matrix& operator=(const Matrix& other) = default;
+    // If copying throws, the destination's shape and values remain unchanged.
+    Matrix& operator=(const Matrix& other);
 
 // move semantics
     Matrix(Matrix&& other) noexcept;

@@ -12,6 +12,15 @@ namespace inference{
         data_.resize(rows * cols, 0.0f);
     }
 
+    Matrix& Matrix::operator=(const Matrix& other){
+        if(this != &other){
+            // Finish the potentially throwing copy before changing this matrix.
+            Matrix copy(other);
+            *this = std::move(copy);
+        }
+        return *this;
+    }
+
     Matrix::Matrix(Matrix&& other) noexcept
     : rows_(other.rows_), cols_(other.cols_), data_(std::move(other.data_))
     {
