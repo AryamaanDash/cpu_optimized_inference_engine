@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <cmath>
+#include <sstream>
 
 using inference::Matrix;
 
@@ -32,6 +34,32 @@ void check(bool condition, const char* message) {
     }
 }
 
+
+bool nearly_equal(double actual, double expected, double atol, double rtol){
+  if(!std::isfinite(actual) || !std::isfinite(expected)){
+    return false;
+  }
+  return std::abs(actual - expected) <= atol + rtol * std::abs(expected);
+}
+
+void check_matrix_close(const Matrix& actual, const Matrix& expected, double atol, double rtol){
+  check(actual.rows() == expected.rows() && actual.cols() == expected.cols(),
+      "Matrix dimensions do not match.");
+
+  for(std::size_t row = 0; row < actual.rows(); ++row){
+    for(std::size_t col = 0; col < actual.cols(); ++col){
+      if(!nearly_equal(actual(row, col), expected(row, col),
+                        atol, rtol)){
+        std::ostringstream message;
+        message.precision(17);
+        message << "Matrix mismatch at (" << row << ", " << col << "): actual=" << actual(row, col) << ", expected=" << expected(row, col) << ", atol=" << atol << ", rtol=" << rtol;
+
+        throw std::runtime_error(message.str());
+      }
+    }
+  }
+}
+
 template <typename Exception, typename Function>
 void expect_throw(Function function, const char* message) {
     try {
@@ -40,6 +68,42 @@ void expect_throw(Function function, const char* message) {
         return;
     }
     throw std::runtime_error(message);
+}
+
+void matrix_comparison() {
+    Matrix expected(2, 3);
+    expected(0, 0) = 100.0f;
+    expected(1, 2) = -2.0f;
+
+    Matrix actual = expected;
+
+    // Identical matrices must pass.
+    check_matrix_close(actual, expected, 1e-5, 1e-5);
+
+    // Small differences within tolerance must pass.
+    actual(0, 0) += 0.0005f;  // Relative tolerance
+    actual(0, 1) = 0.000001f; // Absolute tolerance near zero
+    check_matrix_close(actual, expected, 1e-5, 1e-5);
+
+    // A mismatch at the last element must be detected.
+    actual = expected;
+    actual(1, 2) = -3.0f;
+    expect_throw<std::runtime_error>(
+        [&] { check_matrix_close(actual, expected, 1e-5, 1e-5); },
+        "Comparison accepted an incorrect element");
+
+    // Different dimensions must be rejected before indexing.
+    const Matrix wrong_shape(3, 2);
+    expect_throw<std::runtime_error>(
+        [&] { check_matrix_close(wrong_shape, expected, 1e-5, 1e-5); },
+        "Comparison accepted different dimensions");
+
+    // Unexpected NaN must be rejected.
+    actual = expected;
+    actual(0, 0) = std::numeric_limits<float>::quiet_NaN();
+    expect_throw<std::runtime_error>(
+        [&] { check_matrix_close(actual, expected, 1e-5, 1e-5); },
+        "Comparison accepted NaN");
 }
 
 void construction() {
@@ -290,7 +354,8 @@ int main() {
         {"matmul square", matmul_square},
         {"matmul rectangular", matmul_rectangular},
         {"matmul incompatible shapes", matmul_incompatible_shapes},
-        {"matmul_zero_inner_dimension", matmul_zero_inner_dimension}
+        {"matmul_zero_inner_dimension", matmul_zero_inner_dimension},
+        {"matrix comparison helper", matrix_comparison},
     };
     int failures = 0;
     for (const auto& test : tests) {
