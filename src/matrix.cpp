@@ -1,5 +1,6 @@
 #include "inference/matrix.hpp"
 #include <stdexcept>
+#include <utility>
 
 namespace inference{
     Matrix::Matrix(std::size_t rows, std::size_t cols){
@@ -59,5 +60,22 @@ namespace inference{
     
     const float* Matrix::data() const noexcept{
         return data_.data();
+    }
+
+    Matrix matmul_reference(const Matrix& a, const Matrix& b){
+            if(a.cols() != b.rows()){
+                throw std::invalid_argument("Columns of first matrix must match rows of second matrix");
+            }
+            Matrix result(a.rows(), b.cols());
+            for(std::size_t row = 0; row < result.rows(); ++row){
+                for(std::size_t col = 0; col < result.cols(); ++col){
+                    float total = 0.0f;
+                    for(std::size_t k = 0; k < b.rows(); ++k){
+                        total += a(row, k) * b(k, col);
+                    }
+                    result(row, col) = total;
+                }
+            }
+            return result;
     }
 }

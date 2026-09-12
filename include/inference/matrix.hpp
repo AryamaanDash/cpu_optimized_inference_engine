@@ -34,6 +34,9 @@ private:
     std::size_t cols_;
     std::vector<float> data_;
 };
+
+Matrix matmul_reference(const Matrix& a, const Matrix& b);
+
 }
 
 #endif // MATRIX_HPP
