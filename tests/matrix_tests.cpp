@@ -186,6 +186,89 @@ void move_assignment() {
     check_moved_from(source);
 }
 
+void matmul_square(){
+  Matrix a(2, 2);
+  Matrix b(2, 2);
+
+  const float a_values[] = {1, 2, 3, 4};
+  const float b_values[] = {5, 6 ,7 , 8};
+  const float expected[] = {19, 22, 43, 50};
+
+  for(std::size_t i = 0; i < 4; ++i){
+    a.data()[i] = a_values[i];
+    b.data()[i] = b_values[i];
+  }
+  const Matrix result = inference::matmul_reference(a, b);
+
+  check(result.rows() == 2 && result.cols() == 2,
+      "Square multiplication returned the wrong shape");
+
+  for (std::size_t i = 0; i < 4; ++i){
+    check(result.data()[i] == expected[i],
+        "Square multiplication returned an incorrect value");
+    check(a.data()[i] == a_values[i] && b.data()[i] == b_values[i],
+        "Multiplication changed the input values");
+  }
+}
+
+void matmul_rectangular(){
+
+    Matrix a(2, 3);
+    Matrix b(3, 2);
+
+    const float a_values[] = {1, 2, 3, 4, 5, 6};
+    const float b_values[] = {7, 8, 9, 10, 11, 12};
+    const float expected[] = {58, 64, 139, 154};
+
+    for (std::size_t i = 0; i < 6; ++i) {
+        a.data()[i] = a_values[i];
+        b.data()[i] = b_values[i];
+    }
+
+    const Matrix result = inference::matmul_reference(a, b);
+
+    check(result.rows() == 2 && result.cols() == 2,
+          "Rectangular multiplication returned the wrong shape");
+
+    for (std::size_t i = 0; i < 4; ++i) {
+        check(result.data()[i] == expected[i],
+              "Rectangular multiplication returned an incorrect value");
+    }
+
+    for (std::size_t i = 0; i < 6; ++i) {
+        check(a.data()[i] == a_values[i] &&
+              b.data()[i] == b_values[i],
+              "Multiplication changed its inputs");
+    }
+}
+
+void  matmul_incompatible_shapes(){
+  const Matrix a(2, 3);
+  const Matrix b(2, 3);
+  expect_throw<std::invalid_argument>(
+      [&] {
+          (void)inference::matmul_reference(a,b);
+      },
+        "Multiplication accepted incompatible shapes");
+}
+
+void matmul_zero_inner_dimension(){
+  const Matrix a(2, 0);
+  const Matrix b(0, 3);
+
+  const Matrix result = inference::matmul_reference(a, b);
+
+  check(result.rows() == 2 && result.cols() == 3,
+          "Zero-inner-dimension multiplication returned the wrong shape");
+
+  for (std::size_t row = 0; row < result.rows(); ++row) {
+      for (std::size_t col = 0; col < result.cols(); ++col) {
+          check(result(row, col) == 0.0f,
+          "Zero-inner-dimension multiplication must produce zeros");
+        }
+    }
+}
+
 } // namespace
 
 int main() {
@@ -204,6 +287,10 @@ int main() {
         {"copy outlives source", copy_outlives_source},
         {"move construction", move_construction},
         {"move assignment", move_assignment},
+        {"matmul square", matmul_square},
+        {"matmul rectangular", matmul_rectangular},
+        {"matmul incompatible shapes", matmul_incompatible_shapes},
+        {"matmul_zero_inner_dimension", matmul_zero_inner_dimension}
     };
     int failures = 0;
     for (const auto& test : tests) {
