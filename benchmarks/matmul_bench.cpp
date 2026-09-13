@@ -1,6 +1,5 @@
 #include "inference/matrix.hpp"
 
-
 #include <benchmark/benchmark.h>
 #include <cstddef>
 
@@ -27,6 +26,16 @@ static void BM_MatmulReferenceAllocationIncluded(benchmark::State& state){
     benchmark::DoNotOptimize(output);
     benchmark::ClobberMemory();
   }
+
+  const double flops_per_matmul = 2.0 * static_cast<double>(m) * static_cast<double>(k) * static_cast<double>(n);
+
+  state.counters["GFLOPS"] = benchmark::Counter(
+    flops_per_matmul / 1e9,
+    benchmark::Counter::kIsIterationInvariantRate
+  );
+  // flops_per_matmul / 1e9 supplies the number of GFLOPs per iteration
+  // kIsIterationInvariantRate tells Google Benchmark that every iteration performs that same amount of work
+  // The framework multiplies by the iteration count and divides by measured duration producing GFLOP/s.
 }
 
 BENCHMARK(BM_MatmulReferenceAllocationIncluded)
