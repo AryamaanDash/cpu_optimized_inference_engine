@@ -52,7 +52,8 @@ def machine_state():
         "ram_bytes": probe(["/usr/sbin/sysctl", "-n", "hw.memsize"]),
         "logical_cpus": probe(["/usr/sbin/sysctl", "-n", "hw.logicalcpu"]),
         "power_settings": probe(["/usr/bin/pmset", "-g", "custom"]),
-        "thermal_status": probe(["/usr/bin/pmset", "-g", "batt"]),
+        "power_source": probe(["/usr/bin/pmset", "-g", "batt"]),
+        "thermal_source": probe(["/usr/bin/pmset", "-g", "therm"]),
         "load_average": list(os.getloadavg()),
     }
 
