@@ -16,7 +16,6 @@ CTestTestfile.cmake
 Testing/
 install_manifest.txt
 compile_commands.json
-!/benchmark-results/curated/**/compile_commands.json
 CMakeUserPresets.json
 build.ninja
 rules.ninja

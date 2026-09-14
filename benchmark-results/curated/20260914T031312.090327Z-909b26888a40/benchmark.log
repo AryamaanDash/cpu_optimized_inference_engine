@@ -1,0 +1,112 @@
+Unable to determine clock rate from sysctl: hw.cpufrequency: No such file or directory
+This does not affect benchmark measurements, only the metadata output.
+***WARNING*** Failed to set thread affinity. Estimated CPU frequency may be incorrect.
+2026-09-13T20:13:14-07:00
+Running /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/matmul_bench
+Run on (11 X 24 MHz CPU s)
+CPU Caches:
+  L1 Data 64 KiB
+  L1 Instruction 128 KiB
+  L2 Unified 4096 KiB (x11)
+Load Average: 5.11, 3.06, 2.82
+-------------------------------------------------------------------------------------------------------------------
+Benchmark                                                              Time             CPU   Iterations     GFLOPS
+-------------------------------------------------------------------------------------------------------------------
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1                   0.024 us        0.024 us     59889461 0.0848994/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1                   0.024 us        0.024 us     59889461 0.0848038/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1                   0.024 us        0.024 us     59889461 0.0841969/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1                   0.024 us        0.024 us     59889461 0.0840201/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1                   0.024 us        0.024 us     59889461 0.0838345/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1                   0.024 us        0.024 us     59889461 0.0847409/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1                   0.024 us        0.024 us     59889461 0.0841268/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1                   0.024 us        0.024 us     59889461 0.0847487/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1                   0.024 us        0.024 us     59889461 0.0845606/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1                   0.024 us        0.024 us     59889461 0.0843005/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1_mean              0.024 us        0.024 us           10 0.0844232/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1_median            0.024 us        0.024 us           10 0.0844305/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1_stddev            0.000 us        0.000 us           10 374.257u/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:1/N:1_cv                 0.48 %          0.44 %            10      0.44%
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32                 11.7 us         11.7 us       118767   5.5915/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32                 11.7 us         11.7 us       118767  5.61883/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32                 11.8 us         11.8 us       118767  5.57601/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32                 11.9 us         11.8 us       118767  5.53057/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32                 11.8 us         11.8 us       118767  5.57571/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32                 11.7 us         11.7 us       118767  5.62037/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32                 12.2 us         12.1 us       118767  5.40859/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32                 11.7 us         11.7 us       118767  5.60717/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32                 11.8 us         11.8 us       118767  5.56913/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32                 11.7 us         11.7 us       118767  5.58365/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32_mean            11.8 us         11.8 us           10  5.56815/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32_median          11.8 us         11.7 us           10  5.57983/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32_stddev         0.151 us        0.134 us           10 0.0619979/s
+BM_MatmulReferenceAllocationIncluded/M:32/K:32/N:32_cv              1.28 %          1.14 %            10      1.11%
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128              1250 us         1249 us         1133  3.35844/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128              1253 us         1252 us         1133  3.35028/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128              1253 us         1252 us         1133  3.35044/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128              1257 us         1255 us         1133  3.34139/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128              1236 us         1235 us         1133  3.39534/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128              1241 us         1240 us         1133  3.38346/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128              1251 us         1249 us         1133  3.35691/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128              1246 us         1245 us         1133  3.36889/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128              1247 us         1246 us         1133  3.36753/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128              1245 us         1244 us         1133  3.37203/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128_mean         1248 us         1247 us           10  3.36447/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128_median       1248 us         1247 us           10  3.36299/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128_stddev       6.27 us         6.07 us           10 0.0164117/s
+BM_MatmulReferenceAllocationIncluded/M:128/K:128/N:128_cv           0.50 %          0.49 %            10      0.49%
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256             12716 us        12706 us          109  2.64092/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256             12813 us        12802 us          109  2.62094/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256             12716 us        12706 us          109  2.64094/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256             12711 us        12701 us          109  2.64197/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256             12615 us        12605 us          109  2.66204/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256             12706 us        12695 us          109  2.64307/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256             12768 us        12749 us          109  2.63184/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256             12726 us        12713 us          109  2.63933/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256             12792 us        12771 us          109  2.62732/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256             13110 us        13041 us          109  2.57305/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256_mean        12767 us        12749 us           10  2.63214/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256_median      12721 us        12709 us           10  2.64012/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256_stddev        132 us          115 us           10 0.0234676/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:256_cv           1.03 %          0.90 %            10      0.89%
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67                  126 us          125 us        11241  4.37395/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67                  126 us          126 us        11241  4.35826/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67                  126 us          126 us        11241  4.36147/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67                  126 us          125 us        11241  4.37574/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67                  126 us          125 us        11241  4.37442/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67                  126 us          126 us        11241  4.35671/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67                  125 us          125 us        11241  4.37924/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67                  126 us          126 us        11241  4.36732/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67                  125 us          125 us        11241  4.38319/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67                  125 us          125 us        11241  4.37885/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67_mean             126 us          126 us           10  4.37091/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67_median           126 us          125 us           10  4.37418/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67_stddev         0.270 us        0.270 us           10 9.37827m/s
+BM_MatmulReferenceAllocationIncluded/M:63/K:65/N:67_cv              0.21 %          0.21 %            10      0.21%
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256                49.7 us         49.7 us        28468  2.63886/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256                50.0 us         49.9 us        28468  2.62651/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256                49.6 us         49.6 us        28468  2.64194/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256                49.9 us         49.8 us        28468  2.63238/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256                49.6 us         49.5 us        28468  2.64583/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256                49.5 us         49.5 us        28468  2.64886/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256                49.8 us         49.8 us        28468  2.63372/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256                49.7 us         49.6 us        28468  2.64183/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256                49.6 us         49.5 us        28468  2.64718/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256                50.0 us         50.0 us        28468  2.62128/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256_mean           49.7 us         49.7 us           10  2.63784/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256_median         49.7 us         49.6 us           10  2.64034/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256_stddev        0.184 us        0.173 us           10 9.16254m/s
+BM_MatmulReferenceAllocationIncluded/M:1/K:256/N:256_cv             0.37 %          0.35 %            10      0.35%
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1                28.8 us         28.8 us        48982  4.55557/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1                28.6 us         28.6 us        48982  4.58254/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1                28.6 us         28.6 us        48982  4.58839/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1                28.9 us         28.8 us        48982  4.54625/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1                28.5 us         28.5 us        48982  4.59961/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1                28.6 us         28.6 us        48982  4.58383/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1                28.7 us         28.7 us        48982   4.5704/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1                28.6 us         28.6 us        48982  4.58188/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1                28.7 us         28.7 us        48982  4.57313/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1                28.8 us         28.7 us        48982  4.56144/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1_mean           28.7 us         28.7 us           10   4.5743/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1_median         28.7 us         28.6 us           10  4.57751/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1_stddev        0.113 us        0.102 us           10 0.0162441/s
+BM_MatmulReferenceAllocationIncluded/M:256/K:256/N:1_cv             0.39 %          0.36 %            10      0.36%

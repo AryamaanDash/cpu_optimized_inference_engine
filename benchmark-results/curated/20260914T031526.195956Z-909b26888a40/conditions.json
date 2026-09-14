@@ -1,0 +1,192 @@
+{
+  "label": "D",
+  "capture_command": [
+    "python3",
+    "scripts/run_benchmarks.py",
+    "--warmup",
+    "1",
+    "--min-time",
+    "1",
+    "--repetitions",
+    "10",
+    "--notes",
+    "Process snapshot immediately before capture observed: ChatGPT, Code Helper, Code Helper (Plugin), Code Helper (Renderer), Codex (Renderer), Codex (Service), Google Chrome, Google Chrome Helper, Google Chrome Helper (Renderer), Spotify, Spotify Helper, Spotify Helper (Renderer), chrome_crashpad_handler, codex, codex-code-mode-host. Background activity and scheduling were not controlled; no apps were closed. Battery power and Low Power Mode off observed at initial preflight; per-run power snapshots are recorded. Codex launched this sequential capture after a 20-second settling interval. No additional assistant build or analysis ran concurrently with measurement; process snapshots were taken only before/after the capture, not during its timed loop."
+  ],
+  "before": {
+    "utc": "2026-09-14T03:15:26.124714+00:00",
+    "load_average": [
+      3.64599609375,
+      3.1103515625,
+      2.8701171875
+    ],
+    "observed_application_process_names": [
+      "ChatGPT",
+      "Code Helper",
+      "Code Helper (Plugin)",
+      "Code Helper (Renderer)",
+      "Codex (Renderer)",
+      "Codex (Service)",
+      "Google Chrome",
+      "Google Chrome Helper",
+      "Google Chrome Helper (Renderer)",
+      "Spotify",
+      "Spotify Helper",
+      "Spotify Helper (Renderer)",
+      "chrome_crashpad_handler",
+      "codex",
+      "codex-code-mode-host"
+    ],
+    "top_cpu_processes": [
+      {
+        "pid": 403,
+        "cpu_percent": 46.4,
+        "name": "WindowServer"
+      },
+      {
+        "pid": 1750,
+        "cpu_percent": 23.7,
+        "name": "Codex (Renderer)"
+      },
+      {
+        "pid": 951,
+        "cpu_percent": 19.6,
+        "name": "Codex (Service)"
+      },
+      {
+        "pid": 648,
+        "cpu_percent": 14.2,
+        "name": "ChatGPT"
+      },
+      {
+        "pid": 525,
+        "cpu_percent": 2.7,
+        "name": "backgroundtaskmanagementd"
+      },
+      {
+        "pid": 59921,
+        "cpu_percent": 2.7,
+        "name": "Google Chrome Helper (Renderer)"
+      },
+      {
+        "pid": 415,
+        "cpu_percent": 1.9,
+        "name": "coreaudiod"
+      },
+      {
+        "pid": 413,
+        "cpu_percent": 1.8,
+        "name": "trustd"
+      },
+      {
+        "pid": 563,
+        "cpu_percent": 1.8,
+        "name": "com.apple.DriverKit-AppleBCMWLAN"
+      },
+      {
+        "pid": 331,
+        "cpu_percent": 1.6,
+        "name": "smd"
+      },
+      {
+        "pid": 1731,
+        "cpu_percent": 1.6,
+        "name": "codex"
+      },
+      {
+        "pid": 708,
+        "cpu_percent": 1.0,
+        "name": "Google Chrome Helper"
+      }
+    ],
+    "power_source": "Now drawing from 'Battery Power'\n -InternalBattery-0 (id=22544483)\t66%; discharging; 2:31 remaining present: true"
+  },
+  "after": {
+    "utc": "2026-09-14T03:17:19.629463+00:00",
+    "load_average": [
+      3.5185546875,
+      3.21484375,
+      2.9365234375
+    ],
+    "observed_application_process_names": [
+      "ChatGPT",
+      "Code Helper",
+      "Code Helper (Plugin)",
+      "Code Helper (Renderer)",
+      "Codex (Renderer)",
+      "Codex (Service)",
+      "Google Chrome",
+      "Google Chrome Helper",
+      "Google Chrome Helper (Renderer)",
+      "Spotify",
+      "Spotify Helper",
+      "Spotify Helper (Renderer)",
+      "chrome_crashpad_handler",
+      "codex",
+      "codex-code-mode-host"
+    ],
+    "top_cpu_processes": [
+      {
+        "pid": 648,
+        "cpu_percent": 30.4,
+        "name": "ChatGPT"
+      },
+      {
+        "pid": 403,
+        "cpu_percent": 25.9,
+        "name": "WindowServer"
+      },
+      {
+        "pid": 951,
+        "cpu_percent": 7.8,
+        "name": "Codex (Service)"
+      },
+      {
+        "pid": 1750,
+        "cpu_percent": 7.5,
+        "name": "Codex (Renderer)"
+      },
+      {
+        "pid": 59921,
+        "cpu_percent": 2.3,
+        "name": "Google Chrome Helper (Renderer)"
+      },
+      {
+        "pid": 359,
+        "cpu_percent": 1.6,
+        "name": "mds"
+      },
+      {
+        "pid": 415,
+        "cpu_percent": 1.4,
+        "name": "coreaudiod"
+      },
+      {
+        "pid": 573,
+        "cpu_percent": 1.1,
+        "name": "mds_stores"
+      },
+      {
+        "pid": 563,
+        "cpu_percent": 1.0,
+        "name": "com.apple.DriverKit-AppleBCMWLAN"
+      },
+      {
+        "pid": 702,
+        "cpu_percent": 1.0,
+        "name": "wifip2pd"
+      },
+      {
+        "pid": 708,
+        "cpu_percent": 0.9,
+        "name": "Google Chrome Helper"
+      },
+      {
+        "pid": 75036,
+        "cpu_percent": 0.9,
+        "name": "mdworker_shared"
+      }
+    ],
+    "power_source": "Now drawing from 'Battery Power'\n -InternalBattery-0 (id=22544483)\t65%; discharging; 2:11 remaining present: true"
+  },
+  "note": "Process CPU values are ps snapshots, not continuous measurements."
+}

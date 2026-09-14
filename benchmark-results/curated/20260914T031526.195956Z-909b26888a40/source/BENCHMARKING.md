@@ -1,12 +1,5 @@
 # Saving a reproducible benchmark run
 
-**Roadmap Step 5 is complete.** The follow-up pair C–D below establishes an
-allocation-inclusive, single-thread FP32 baseline on this Mac: median CPU times
-agree within 1.39% across all seven shapes, with within-run CV at most 1.14%.
-This is observed repeatability under the recorded conditions, not a guarantee
-for other sessions or a threshold for declaring small speedups. Step 6 is
-profiling and compiler inspection.
-
 From the repository root on macOS, run:
 
 ```sh
@@ -69,7 +62,7 @@ performance change; an individual capture is not itself a repeatability study.
 
 ## Initial repeatability comparison — September 13, 2026 (PDT)
 
-The initial pair A–B compares the same implementation in separate process
+The two newest saved runs compare the same implementation in separate process
 invocations. Both completed successfully, each recorded 35 measurements across
 seven shapes, and both saved CTest logs show all three tests passing. Their
 median differences and within-run variability are large enough that these runs
@@ -77,28 +70,25 @@ are an initial comparison, not yet a stable baseline for small performance claim
 
 ### Saved evidence
 
-| Run | Run folder | Capture interval (UTC, September 14) |
+| Run | Local result folder | Capture interval (UTC, September 14) |
 |---|---|---|
 | A | `20260914T025158.557814Z-f06433366a6f` | 02:51:58–02:52:59 |
 | B | `20260914T025345.329545Z-f06433366a6f` | 02:53:45–02:54:45 |
 
-- Run A: [raw results](benchmark-results/curated/20260914T025158.557814Z-f06433366a6f/results.json),
-  [metadata and exact commands](benchmark-results/curated/20260914T025158.557814Z-f06433366a6f/metadata.json),
-  [compiler invocations](benchmark-results/curated/20260914T025158.557814Z-f06433366a6f/compile_commands.json),
-  [test log](benchmark-results/curated/20260914T025158.557814Z-f06433366a6f/tests.log),
-  [benchmark log](benchmark-results/curated/20260914T025158.557814Z-f06433366a6f/benchmark.log).
-- Run B: [raw results](benchmark-results/curated/20260914T025345.329545Z-f06433366a6f/results.json),
-  [metadata and exact commands](benchmark-results/curated/20260914T025345.329545Z-f06433366a6f/metadata.json),
-  [compiler invocations](benchmark-results/curated/20260914T025345.329545Z-f06433366a6f/compile_commands.json),
-  [test log](benchmark-results/curated/20260914T025345.329545Z-f06433366a6f/tests.log),
-  [benchmark log](benchmark-results/curated/20260914T025345.329545Z-f06433366a6f/benchmark.log).
+- Run A: [raw results](benchmark-results/local/20260914T025158.557814Z-f06433366a6f/results.json),
+  [metadata and exact commands](benchmark-results/local/20260914T025158.557814Z-f06433366a6f/metadata.json),
+  [compiler invocations](benchmark-results/local/20260914T025158.557814Z-f06433366a6f/compile_commands.json),
+  [test log](benchmark-results/local/20260914T025158.557814Z-f06433366a6f/tests.log),
+  [benchmark log](benchmark-results/local/20260914T025158.557814Z-f06433366a6f/benchmark.log).
+- Run B: [raw results](benchmark-results/local/20260914T025345.329545Z-f06433366a6f/results.json),
+  [metadata and exact commands](benchmark-results/local/20260914T025345.329545Z-f06433366a6f/metadata.json),
+  [compiler invocations](benchmark-results/local/20260914T025345.329545Z-f06433366a6f/compile_commands.json),
+  [test log](benchmark-results/local/20260914T025345.329545Z-f06433366a6f/tests.log),
+  [benchmark log](benchmark-results/local/20260914T025345.329545Z-f06433366a6f/benchmark.log).
 
-All four comparison runs A–D have been copied to `benchmark-results/curated/`
-for version control. The original local captures remain intact. Raw results,
-metadata, logs, and source snapshots are preserved byte-for-byte; metadata
-commands retain their original local output paths. Read each curated folder's
-`results.json` for its copied data. The ignore rules explicitly allow curated
-compile-command files so actual flags can accompany the evidence in Git.
+These folders are ignored local artifacts; the links work in this checkout but
+will not accompany a Git clone unless the evidence is deliberately curated.
+Raw results and metadata were left unchanged during this review.
 
 ### Comparability checks
 
@@ -179,110 +169,12 @@ rate could not be determined and thread affinity could not be set. Do not use
 the displayed 24 MHz estimate as a measured chip frequency or infer cache behavior
 from these timing results alone.
 
-This initial pair motivated the follow-up below. Its observed 7.13% difference
-is evidence from this pair, not a universal noise threshold or statistical
-confidence bound. The initial measurements are retained alongside the follow-up.
-
-## Follow-up baseline — September 13, 2026 (PDT)
-
-Runs C and D were collected sequentially after the initial review. Each used
-ten repetitions per shape and 1 second of warm-up; the minimum measurement
-duration remained 1 second per repetition. A 20-second settling interval preceded
-each capture. Both complete runs were retained without filtering any repetitions.
-The pair contains 140 individual measurements in total, and all three CTest
-tests passed before each benchmark invocation.
-
-### Evidence and protocol
-
-| Run | Curated result folder | Capture interval (UTC, September 14) |
-|---|---|---|
-| C | `20260914T031312.090327Z-909b26888a40` | 03:13:12–03:15:06 |
-| D | `20260914T031526.195956Z-909b26888a40` | 03:15:26–03:17:19 |
-
-- Run C: [raw results](benchmark-results/curated/20260914T031312.090327Z-909b26888a40/results.json),
-  [metadata and exact commands](benchmark-results/curated/20260914T031312.090327Z-909b26888a40/metadata.json),
-  [observed processes](benchmark-results/curated/20260914T031312.090327Z-909b26888a40/conditions.json),
-  [compiler invocations](benchmark-results/curated/20260914T031312.090327Z-909b26888a40/compile_commands.json),
-  [test log](benchmark-results/curated/20260914T031312.090327Z-909b26888a40/tests.log),
-  [benchmark log](benchmark-results/curated/20260914T031312.090327Z-909b26888a40/benchmark.log).
-- Run D: [raw results](benchmark-results/curated/20260914T031526.195956Z-909b26888a40/results.json),
-  [metadata and exact commands](benchmark-results/curated/20260914T031526.195956Z-909b26888a40/metadata.json),
-  [observed processes](benchmark-results/curated/20260914T031526.195956Z-909b26888a40/conditions.json),
-  [compiler invocations](benchmark-results/curated/20260914T031526.195956Z-909b26888a40/compile_commands.json),
-  [test log](benchmark-results/curated/20260914T031526.195956Z-909b26888a40/tests.log),
-  [benchmark log](benchmark-results/curated/20260914T031526.195956Z-909b26888a40/benchmark.log).
-- [Machine-readable comparison of both pairs](benchmark-results/curated/step5-comparison.csv).
-
-Both runs recorded clean commit `909b26888a40358615af728f5889be3b0312a6ae`,
-unchanged during capture. Their source manifests, build metadata, protocols,
-and compiler invocations match, and their saved source/result hashes validate.
-They used the same executable SHA-256 as A and B, shown above. Thus the new
-commit records documentation work; the measured implementation did not change.
-Compiler, dependency, chip, RAM, OS, input formulas, and allocation-inclusive
-CPU-time measurement scope remain as recorded in the initial comparison.
-
-The same application process names were observed before both captures: Google
-Chrome and helpers, ChatGPT, Spotify and helpers, Codex and helpers, and Code
-Helper processes. `conditions.json` records timestamps, names, top CPU consumers,
-load, and power-source snapshots before and after each capture. These observations
-establish process presence, not identical app activity or tab counts. No apps
-were closed or background workloads controlled. No additional assistant build
-or data analysis ran concurrently with the measurements; process sampling was
-limited to capture boundaries.
-
-All four before/after machine snapshots recorded battery power and matching
-power settings with Low Power Mode disabled. Charge changed from 68% to 66%
-in C and 66% to 65% in D. The one-minute load averages were C 5.11 → 3.40 and
-D 3.65 → 3.52. Thermal probes reported no recorded warnings and no recorded CPU
-power status. The same frequency/affinity warnings described above remained.
-These are measurements on an active desktop, not an isolated or pinned CPU.
-
-### Follow-up results
-
-Definitions match the initial table: median CPU microseconds, signed median
-change from C to D, within-run CPU CV in percent, and median allocation-inclusive
-GFLOP/s. All aggregates and GFLOP/s calculations were checked against the raw
-measurements. No slow samples were excluded.
-
-| Shape (M, K, N) | C CPU µs | D CPU µs | Change | C CV | D CV | C GFLOP/s | D GFLOP/s |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| (1, 1, 1) | 0.023688 | 0.023681 | -0.03% | 0.44% | 1.00% | 0.084 | 0.084 |
-| (32, 32, 32) | 11.745156 | 11.736629 | -0.07% | 1.14% | 0.72% | 5.580 | 5.584 |
-| (128, 128, 128) | 1247.199029 | 1258.673479 | +0.92% | 0.49% | 1.00% | 3.363 | 3.332 |
-| (256, 256, 256) | 12709.417431 | 12818.680556 | +0.86% | 0.90% | 0.43% | 2.640 | 2.618 |
-| (63, 65, 67) | 125.447425 | 127.082818 | +1.30% | 0.21% | 0.94% | 4.374 | 4.318 |
-| (1, 256, 256) | 49.642037 | 49.212700 | -0.86% | 0.35% | 0.31% | 2.640 | 2.663 |
-| (256, 256, 1) | 28.633957 | 29.030921 | +1.39% | 0.36% | 0.41% | 4.578 | 4.515 |
-
-### Completion and use of this baseline
-
-Step 5's exit criteria are satisfied: Release measurements cover several shapes,
-the compiler/flags/machine/commit are recorded, complete raw results are saved,
-and a second invocation demonstrates comparable timings under the
-documented protocol. Maximum absolute median difference is 1.39%, and maximum
-within-run CV is 1.14% in this pair. The baseline is the complete C–D pair, not
-the fastest run or the minimum time for each shape.
-
-The initial A–B pair remains relevant evidence of broader session variability.
-C–D used longer warm-up and more repetitions, and background activity differed;
-this experiment does not isolate which factor improved consistency. Some C–D
-latencies are higher than A–B despite the identical executable. Do not describe
-that change as a code regression or discard C–D in favor of faster historical
-numbers. The measured 1.39% is not a confidence interval or universal noise floor.
-
-For future optimizations, use the follow-up settings below for both the reference
-and changed implementation in comparable conditions, retain repetitions, and
-repeat the comparison. Changes comparable to the observed variation require
-more evidence; do not claim a speedup from one faster measurement.
-
-```sh
-python3 scripts/run_benchmarks.py \
-  --warmup 1 \
-  --min-time 1 \
-  --repetitions 10 \
-  --notes "Record the applications and workload actually present for this run"
-```
-
-Replace the notes text with observed conditions. The next roadmap milestone is
-Step 6: inspect a baseline profile and compiler output, identify the hot kernel,
-and document one testable performance hypothesis before changing the kernel.
+Item 6 has an initial documented comparison, but a stable baseline for small
+speedup claims remains to be established. Collect an additional pair of separate
+runs of the same committed implementation under comparable, accurately described
+conditions. Keep power source/mode fixed, let unrelated heavy activity settle,
+and record actual applications or workloads in `--notes`. Append the new results
+and compare all runs rather than selecting the fastest. If substantial variation
+persists, investigate it and document the practical measurement limits before
+claiming small improvements. The observed 7.13% difference is evidence from this
+pair, not a universal noise threshold or statistical confidence bound.
