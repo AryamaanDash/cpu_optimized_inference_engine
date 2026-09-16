@@ -283,6 +283,7 @@ python3 scripts/run_benchmarks.py \
   --notes "Record the applications and workload actually present for this run"
 ```
 
-Replace the notes text with observed conditions. The next roadmap milestone is
-Step 6: inspect a baseline profile and compiler output, identify the hot kernel,
-and document one testable performance hypothesis before changing the kernel.
+Replace the notes text with observed conditions. Step 6's profile findings,
+compiler inspection, and testable hypothesis are documented in
+[PROFILING.md](PROFILING.md). The next experiment is step 7's controlled
+loop-order comparison, using this unprofiled baseline methodology.
