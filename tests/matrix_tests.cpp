@@ -32,6 +32,8 @@ static_assert(!noexcept(std::declval<const Matrix&>()(0, 0)));
 
 namespace {
 
+using Matmul = Matrix (*)(const Matrix&, const Matrix&);
+
 // Unlike assert(), these checks remain active in Release builds.
 void check(bool condition, const char* message) {
     if (!condition) {
@@ -332,7 +334,7 @@ void move_assignment() {
     check_moved_from(source);
 }
 
-void matmul_square(){
+void matmul_square(Matmul multiply) {
   Matrix a(2, 2);
   Matrix b(2, 2);
 
@@ -344,7 +346,7 @@ void matmul_square(){
     a.data()[i] = a_values[i];
     b.data()[i] = b_values[i];
   }
-  const Matrix result = inference::matmul_reference(a, b);
+  const Matrix result = multiply(a, b);
 
   check(result.rows() == 2 && result.cols() == 2,
       "Square multiplication returned the wrong shape");
@@ -357,7 +359,7 @@ void matmul_square(){
   }
 }
 
-void matmul_rectangular(){
+void matmul_rectangular(Matmul multiply) {
 
     Matrix a(2, 3);
     Matrix b(3, 2);
@@ -371,7 +373,7 @@ void matmul_rectangular(){
         b.data()[i] = b_values[i];
     }
 
-    const Matrix result = inference::matmul_reference(a, b);
+    const Matrix result = multiply(a, b);
 
     check(result.rows() == 2 && result.cols() == 2,
           "Rectangular multiplication returned the wrong shape");
@@ -388,21 +390,21 @@ void matmul_rectangular(){
     }
 }
 
-void  matmul_incompatible_shapes(){
+void matmul_incompatible_shapes(Matmul multiply) {
   const Matrix a(2, 3);
   const Matrix b(2, 3);
   expect_throw<std::invalid_argument>(
       [&] {
-          (void)inference::matmul_reference(a,b);
+          (void)multiply(a,b);
       },
         "Multiplication accepted incompatible shapes");
 }
 
-void matmul_zero_inner_dimension(){
+void matmul_zero_inner_dimension(Matmul multiply) {
   const Matrix a(2, 0);
   const Matrix b(0, 3);
 
-  const Matrix result = inference::matmul_reference(a, b);
+  const Matrix result = multiply(a, b);
 
   check(result.rows() == 2 && result.cols() == 3,
           "Zero-inner-dimension multiplication returned the wrong shape");
@@ -425,17 +427,17 @@ Matrix matrix_from_values(std::size_t rows, std::size_t cols,
     return result;
 }
 
-void check_product(const Matrix& a, const Matrix& b, const Matrix& expected) {
+void check_product(Matmul multiply, const Matrix& a, const Matrix& b, const Matrix& expected) {
     const Matrix original_a = a;
     const Matrix original_b = b;
-    const Matrix actual = inference::matmul_reference(a, b);
+    const Matrix actual = multiply(a, b);
     check_matrix_close(actual, expected, 1e-5, 1e-5);
     // Inputs must be preserved exactly, even when output comparisons use tolerance.
     check_matrix_close(a, original_a, 0.0, 0.0);
     check_matrix_close(b, original_b, 0.0, 0.0);
 }
 
-void matmul_rectangular_output() {
+void matmul_rectangular_output(Matmul multiply) {
     const Matrix a = matrix_from_values(2, 3, {1, 2, 3, 4, 5, 6});
     const Matrix b = matrix_from_values(3, 5, {
          1,  2,  3,  4,  5,
@@ -446,24 +448,24 @@ void matmul_rectangular_output() {
          46,  52,  58,  64,  70,
         100, 115, 130, 145, 160
     });
-    check_product(a, b, expected);
+    check_product(multiply, a, b, expected);
 }
 
-void matmul_scalar() {
-    check_product(matrix_from_values(1, 1, {-2.5f}),
+void matmul_scalar(Matmul multiply) {
+    check_product(multiply, matrix_from_values(1, 1, {-2.5f}),
                   matrix_from_values(1, 1, {4.0f}),
                   matrix_from_values(1, 1, {-10.0f}));
 }
 
-void matmul_dot_product() {
+void matmul_dot_product(Matmul multiply) {
     // 1 * 4 + (-2) * 5 + 3 * (-6) = -24.
-    check_product(matrix_from_values(1, 3, {1, -2, 3}),
+    check_product(multiply, matrix_from_values(1, 3, {1, -2, 3}),
                   matrix_from_values(3, 1, {4, 5, -6}),
                   matrix_from_values(1, 1, {-24}));
 }
 
-void matmul_outer_product() {
-    check_product(matrix_from_values(3, 1, {2, -1, 0.5f}),
+void matmul_outer_product(Matmul multiply) {
+    check_product(multiply, matrix_from_values(3, 1, {2, -1, 0.5f}),
                   matrix_from_values(1, 5, {3, 0, -2, 4, 1}),
                   matrix_from_values(3, 5, {
                        6, 0, -4,  8,  2,
@@ -472,8 +474,8 @@ void matmul_outer_product() {
                   }));
 }
 
-void matmul_mixed_signs_and_fractions() {
-    check_product(matrix_from_values(2, 3, {1, -2, 0.5f, 0, 3, -1}),
+void matmul_mixed_signs_and_fractions(Matmul multiply) {
+    check_product(multiply, matrix_from_values(2, 3, {1, -2, 0.5f, 0, 3, -1}),
                   matrix_from_values(3, 5, {
                        2,  0, -1, 4,  1,
                        1, -2,  3, 0,  2,
@@ -485,12 +487,12 @@ void matmul_mixed_signs_and_fractions() {
                   }));
 
     // Decimal fractions exercise rounding; these products cancel near zero.
-    check_product(matrix_from_values(1, 3, {0.1f, 0.2f, -0.3f}),
+    check_product(multiply, matrix_from_values(1, 3, {0.1f, 0.2f, -0.3f}),
                   matrix_from_values(3, 2, {1, 2, 1, -1, 1, 0}),
                   matrix_from_values(1, 2, {0, 0}));
 }
 
-void matmul_identity() {
+void matmul_identity(Matmul multiply) {
     const Matrix a = matrix_from_values(2, 3, {1, -2, 0.5f, 0, 3, -1});
     const Matrix identity_2 = matrix_from_values(2, 2, {1, 0, 0, 1});
     const Matrix identity_3 = matrix_from_values(3, 3, {
@@ -498,24 +500,24 @@ void matmul_identity() {
         0, 1, 0,
         0, 0, 1
     });
-    check_product(identity_2, a, a);
-    check_product(a, identity_3, a);
+    check_product(multiply, identity_2, a, a);
+    check_product(multiply, a, identity_3, a);
 }
 
-void matmul_zero_operands() {
+void matmul_zero_operands(Matmul multiply) {
     const Matrix a = matrix_from_values(2, 3, {1, -2, 0.5f, 0, 3, -1});
-    check_product(a, Matrix(3, 5), Matrix(2, 5));
-    check_product(Matrix(4, 2), a, Matrix(4, 3));
+    check_product(multiply, a, Matrix(3, 5), Matrix(2, 5));
+    check_product(multiply, Matrix(4, 2), a, Matrix(4, 3));
 }
 
-void matmul_empty_outputs() {
-    check_product(Matrix(0, 3), Matrix(3, 5), Matrix(0, 5));
-    check_product(Matrix(2, 3), Matrix(3, 0), Matrix(2, 0));
-    check_product(Matrix(0, 3), Matrix(3, 0), Matrix(0, 0));
-    check_product(Matrix(0, 0), Matrix(0, 0), Matrix(0, 0));
+void matmul_empty_outputs(Matmul multiply) {
+    check_product(multiply, Matrix(0, 3), Matrix(3, 5), Matrix(0, 5));
+    check_product(multiply, Matrix(2, 3), Matrix(3, 0), Matrix(2, 0));
+    check_product(multiply, Matrix(0, 3), Matrix(3, 0), Matrix(0, 0));
+    check_product(multiply, Matrix(0, 0), Matrix(0, 0), Matrix(0, 0));
 }
 
-void matmul_incompatible_empty_shapes() {
+void matmul_incompatible_empty_shapes(Matmul multiply) {
     struct Shapes { std::size_t a_rows, a_cols, b_rows, b_cols; };
     for (const auto& shape : {
              Shapes{0, 3, 2, 0}, Shapes{0, 3, 2, 5},
@@ -523,22 +525,22 @@ void matmul_incompatible_empty_shapes() {
         const Matrix a(shape.a_rows, shape.a_cols);
         const Matrix b(shape.b_rows, shape.b_cols);
         expect_throw<std::invalid_argument>(
-            [&] { (void)inference::matmul_reference(a, b); },
+            [&] { (void)multiply(a, b); },
             "Multiplication accepted incompatible shapes with empty storage");
     }
 }
 
-void matmul_shared_input() {
+void matmul_shared_input(Matmul multiply) {
     const Matrix a = matrix_from_values(2, 2, {1, 2, 3, 4});
     const Matrix expected = matrix_from_values(2, 2, {7, 10, 15, 22});
-    check_product(a, a, expected);
+    check_product(multiply, a, a, expected);
 
-    Matrix result = inference::matmul_reference(a, a);
+    Matrix result = multiply(a, a);
     result(0, 0) = 99.0f;
     check(a(0, 0) == 1.0f, "Multiplication result shares input storage");
 }
 
-void matmul_deterministic_cases() {
+void matmul_deterministic_cases(Matmul multiply) {
     constexpr std::array<std::size_t, 8> dimensions = {0, 1, 2, 3, 5, 7, 13, 31};
     constexpr std::array<unsigned, 3> seeds = {17u, 12345u, 20260912u};
     for (const unsigned seed : seeds) {
@@ -591,7 +593,7 @@ void matmul_deterministic_cases() {
                         }
                         // The 1e-5 tolerances in check_product are for these
                         // bounded inputs in [-1, 1] and reductions of at most 31.
-                        check_product(a, b, expected);
+                        check_product(multiply, a, b, expected);
                     } catch (const std::exception& error) {
                         std::ostringstream message;
                         message << "seed=" << seed << ", M=" << m
@@ -599,6 +601,135 @@ void matmul_deterministic_cases() {
                         throw std::runtime_error(message.str());
                     }
                 }
+            }
+        }
+    }
+}
+
+// Conservative forward-error bound for bounded, normal FP32 inputs and ordinary
+// round-to-nearest arithmetic (no fast-math). At most 2*K roundings per dot
+// product covers separate multiply/add as well as FMA. Double products of these
+// FP32 fixtures are exact; account for double summation and for rounding in the
+// computed sum of absolute products. Compare directly with double, without a
+// final FP32 rounding of the oracle. This remains meaningful under cancellation.
+double dot_error_bound(std::size_t k, double sum_abs) {
+    const double steps = 2.0 * static_cast<double>(k);
+    const auto gamma = [steps](double unit_roundoff) {
+        const double product = steps * unit_roundoff;
+        check(product < 1.0, "Reduction exceeds error-bound domain");
+        return product / (1.0 - product);
+    };
+    const double float_gamma = gamma(std::numeric_limits<float>::epsilon() / 2.0);
+    const double double_gamma = gamma(std::numeric_limits<double>::epsilon() / 2.0);
+    return (float_gamma + double_gamma) * sum_abs / (1.0 - double_gamma);
+}
+
+void check_dot(double actual, double expected, double sum_abs, std::size_t k) {
+    const double allowed = dot_error_bound(k, sum_abs);
+    if (!nearly_equal(actual, expected, allowed, 0.0)) {
+        std::ostringstream message;
+        message.precision(17);
+        message << "Dot product mismatch: actual=" << actual << ", expected=" << expected
+                << ", absolute_error=" << std::abs(actual - expected)
+                << ", allowed_error=" << allowed << ", sum_abs=" << sum_abs << ", K=" << k;
+        throw std::runtime_error(message.str());
+    }
+}
+
+void dot_error_bound_checks() {
+    check_dot(0.0, 0.0, 0.0, 0);
+    check(dot_error_bound(1024, 100.0) > dot_error_bound(256, 100.0),
+          "Error bound must reflect reduction length");
+    check(dot_error_bound(256, 200.0) > dot_error_bound(256, 100.0),
+          "Error bound must reflect absolute product sum");
+    const double bound = dot_error_bound(1024, 1024.0);
+    check_dot(bound / 2.0, 0.0, 1024.0, 1024);
+    expect_throw<std::runtime_error>(
+        [&] { check_dot(bound * 2.0, 0.0, 1024.0, 1024); },
+        "Error bound accepted excessive cancellation error");
+    expect_throw<std::runtime_error>(
+        [] { check_dot(0.001, 0.0, 0.0, 1024); },
+        "Zero products accepted nonzero output");
+    expect_throw<std::runtime_error>(
+        [] { check_dot(std::numeric_limits<double>::quiet_NaN(), 0.0, 1.0, 256); },
+        "Error bound accepted NaN");
+}
+
+void matmul_large_reductions(Matmul multiply) {
+    struct Shape { std::size_t m, k, n; };
+    // All seven benchmark shapes, plus awkward and longer reductions in both
+    // vector orientations and a non-square matrix case. Avoid a large cubic grid.
+    for (const auto [m, k, n] : {
+             Shape{1, 1, 1}, Shape{32, 32, 32}, Shape{128, 128, 128},
+             Shape{256, 256, 256}, Shape{63, 65, 67}, Shape{1, 256, 256},
+             Shape{256, 256, 1}, Shape{3, 255, 5}, Shape{5, 257, 3},
+             Shape{1, 1024, 17}, Shape{17, 1024, 1}, Shape{3, 1025, 7}}) {
+        // Two random fixtures, exact benchmark inputs, and cancellation-heavy
+        // binary fractions. The latter sum to zero for even K and one residual
+        // product for odd K, so relative-only tolerances would be inappropriate.
+        for (unsigned pattern = 0; pattern < 4; ++pattern) {
+            try {
+                const unsigned seed = pattern == 0 ? 17u : 20260912u;
+                std::mt19937 random(seed);
+                const auto next_value = [&] {
+                    return static_cast<float>(static_cast<int>(random() % 2001) - 1000)
+                           / 1000.0f;
+                };
+                std::vector<std::vector<float>> a_rows(m, std::vector<float>(k));
+                std::vector<std::vector<float>> b_cols(n, std::vector<float>(k));
+                Matrix a(m, k), b(k, n);
+                for (std::size_t row = 0; row < m; ++row) {
+                    for (std::size_t inner = 0; inner < k; ++inner) {
+                        float value = pattern < 2 ? next_value()
+                            : pattern == 2 ? static_cast<float>(static_cast<int>((row * k + inner) % 17) - 8) / 8.0f
+                            : static_cast<float>(row % 7 + 1) / 8.0f;
+                        a_rows[row][inner] = value;
+                        a.data()[row * k + inner] = value;
+                    }
+                }
+                for (std::size_t col = 0; col < n; ++col) {
+                    for (std::size_t inner = 0; inner < k; ++inner) {
+                        float value = pattern < 2 ? next_value()
+                            : pattern == 2 ? static_cast<float>(static_cast<int>((inner * n + col) % 13) - 6) / 6.0f
+                            : (inner % 2 == 0 ? 1.0f : -1.0f) * static_cast<float>(col % 7 + 1) / 8.0f;
+                        b_cols[col][inner] = value;
+                        b.data()[inner * n + col] = value;
+                    }
+                }
+                const Matrix original_a = a, original_b = b;
+                const Matrix actual = multiply(a, b);
+                check(actual.rows() == m && actual.cols() == n, "Incorrect large-product shape");
+                check_matrix_close(a, original_a, 0.0, 0.0);
+                check_matrix_close(b, original_b, 0.0, 0.0);
+                for (std::size_t col = 0; col < n; ++col) {
+                    for (std::size_t row = 0; row < m; ++row) {
+                        double expected = 0.0, sum_abs = 0.0;
+                        for (std::size_t inner = 0; inner < k; ++inner) {
+                            const double product = static_cast<double>(a_rows[row][inner])
+                                                   * static_cast<double>(b_cols[col][inner]);
+                            expected += product;
+                            sum_abs += std::abs(product);
+                        }
+                        try {
+                            check_dot(actual(row, col), expected, sum_abs, k);
+                            if (pattern == 3) {
+                                const double exact = k % 2 == 0 ? 0.0
+                                    : static_cast<double>(a_rows[row][0]) * b_cols[col][0];
+                                check(actual(row, col) == exact,
+                                      "Exactly representable cancellation fixture failed");
+                            }
+                        } catch (const std::exception& error) {
+                            std::ostringstream message;
+                            message << "element=(" << row << ',' << col << "): " << error.what();
+                            throw std::runtime_error(message.str());
+                        }
+                    }
+                }
+            } catch (const std::exception& error) {
+                std::ostringstream message;
+                message << "M=" << m << ", K=" << k << ", N=" << n
+                        << ", pattern=" << pattern << ": " << error.what();
+                throw std::runtime_error(message.str());
             }
         }
     }
@@ -612,6 +743,7 @@ int main() {
         void (*run)();
     };
     const Test tests[] = {
+        {"long-reduction error bound", dot_error_bound_checks},
         {"construction and zero initialization", construction},
         {"row-major storage and const/mutable access", row_major_storage},
         {"bounds checking", bounds},
@@ -622,14 +754,21 @@ int main() {
         {"copy outlives source", copy_outlives_source},
         {"move construction", move_construction},
         {"move assignment", move_assignment},
-        {"matmul square", matmul_square},
-        {"matmul rectangular", matmul_rectangular},
-        {"matmul incompatible shapes", matmul_incompatible_shapes},
-        {"matmul_zero_inner_dimension", matmul_zero_inner_dimension},
         {"matrix comparison helper", matrix_comparison},
         {"comparison absolute and relative tolerance boundaries", comparison_tolerances},
         {"matrix comparison rejects nonfinite values", matrix_comparison_nonfinite},
         {"matrix comparison failure diagnostics", matrix_comparison_diagnostics},
+    };
+    struct KernelTest {
+        const char* name;
+        void (*run)(Matmul);
+    };
+    const KernelTest kernel_tests[] = {
+        {"matmul 48 benchmark and long-reduction oracle cases", matmul_large_reductions},
+        {"matmul square", matmul_square},
+        {"matmul rectangular", matmul_rectangular},
+        {"matmul incompatible shapes", matmul_incompatible_shapes},
+        {"matmul_zero_inner_dimension", matmul_zero_inner_dimension},
         {"matmul rectangular output", matmul_rectangular_output},
         {"matmul scalar", matmul_scalar},
         {"matmul dot product", matmul_dot_product},
@@ -653,6 +792,25 @@ int main() {
         } catch (...) {
             ++failures;
             std::cerr << "FAIL: " << test.name << ": unknown exception\n";
+        }
+    }
+    struct Implementation { const char* name; Matmul multiply; };
+    for (const auto& implementation : {
+             Implementation{"reference", inference::matmul_reference},
+             Implementation{"ikj", inference::matmul_ikj}}) {
+        for (const auto& test : kernel_tests) {
+            try {
+                test.run(implementation.multiply);
+                std::cout << "PASS: " << implementation.name << ": " << test.name << '\n';
+            } catch (const std::exception& error) {
+                ++failures;
+                std::cerr << "FAIL: " << implementation.name << ": " << test.name
+                          << ": " << error.what() << '\n';
+            } catch (...) {
+                ++failures;
+                std::cerr << "FAIL: " << implementation.name << ": " << test.name
+                          << ": unknown exception\n";
+            }
         }
     }
     std::cout << failures << " failed test(s)\n";

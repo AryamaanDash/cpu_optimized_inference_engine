@@ -1,6 +1,7 @@
 # Step 7: Memory access experiments
 
-Status: the first experiment is defined; implementation and measurement are pending.
+Status: the first experiment is defined and both kernels have shared correctness
+coverage. Benchmark integration and measurement are pending.
 No performance improvement or completion of Step 7 is claimed.
 
 ## Experiment 1: row-col-k versus row-k-col
@@ -58,10 +59,10 @@ Measure both implementations for every existing shape:
 | 1 | 256 | 256 | Row-vector times matrix |
 | 256 | 256 | 1 | Matrix times column-vector; contiguous reference B access |
 
-Before measurement, test both implementations against hand-computed examples
-and an independent double-precision oracle. Extend coverage beyond the current
-K=31 limit with a justified tolerance for longer reductions. Debug, Release,
-and AddressSanitizer/UndefinedBehaviorSanitizer checks must pass.
+Both implementations have hand-computed and independent double-precision oracle
+coverage, including all benchmark shapes and reductions up to K=1025. The error
+bound and Debug, Release, and sanitizer commands are documented in
+[TESTING.md](TESTING.md). These checks must pass before measurement.
 
 Update the collector to validate repetitions by implementation and shape;
 its current shape-only count cannot handle two implementations. Verify all

@@ -93,7 +93,7 @@ Matrix matmul_ikj(const Matrix& a, const Matrix& b){
             throw std::invalid_argument("Columns of first matrix must match rows of second matrix");
         }
 
-        Matrix result(a.rows(), b.rows());
+        Matrix result(a.rows(), b.cols());
         
         for(std::size_t row = 0; row < a.rows(); ++row){
             for(std::size_t k = 0; k < a.cols(); ++k){
