@@ -120,6 +120,9 @@ or compute-bound kernel. No hardware-counter measurements were collected.
 
 ## Testable hypothesis for step 7
 
+The concrete experiment definition, controls, and decision criteria are recorded
+in [MEMORY_ACCESS.md](MEMORY_ACCESS.md). Implementation and measurement are pending.
+
 **Hypothesis:** for larger `N>1` workloads, changing loop order from
 `row → col → k` to `row → k → col` will reduce allocation-inclusive CPU time by
 accessing B contiguously and reusing each A value across columns. The strongest
