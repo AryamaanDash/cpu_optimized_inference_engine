@@ -38,6 +38,7 @@ private:
 
 Matrix matmul_reference(const Matrix& a, const Matrix& b);
 
+Matrix matmul_ikj(const Matrix& a, const Matrix& b);
 }
 
 #endif // MATRIX_HPP

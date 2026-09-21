@@ -87,4 +87,23 @@ namespace inference{
             }
             return result;
     }
+
+Matrix matmul_ikj(const Matrix& a, const Matrix& b){
+        if(a.cols() != b.rows()){
+            throw std::invalid_argument("Columns of first matrix must match rows of second matrix");
+        }
+
+        Matrix result(a.rows(), b.rows());
+        
+        for(std::size_t row = 0; row < a.rows(); ++row){
+            for(std::size_t k = 0; k < a.cols(); ++k){
+                const float a_value = a(row, k);
+
+                for(std::size_t col = 0; col < b.cols(); ++ col){
+                    result(row, col) += a_value * b(k, col);
+                }
+            }
+        }
+    return result;
+}
 }
