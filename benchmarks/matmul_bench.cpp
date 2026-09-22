@@ -3,7 +3,8 @@
 #include <benchmark/benchmark.h>
 #include <cstddef>
 
-static void BM_MatmulReferenceAllocationIncluded(benchmark::State& state){
+template <auto Multiply>
+static void MatmulAllocationIncluded(benchmark::State& state){
 
   const auto m = static_cast<std::size_t>(state.range(0));
   const auto k = static_cast<std::size_t>(state.range(1));
@@ -20,7 +21,7 @@ static void BM_MatmulReferenceAllocationIncluded(benchmark::State& state){
     b.data()[i] = static_cast<float>(static_cast<int>(i % 13) - 6) / 6.0f;
 
   for(auto _ : state){
-    auto result = inference::matmul_reference(a, b);
+    auto result = Multiply(a, b);
 
     auto* output = result.data();
     benchmark::DoNotOptimize(output);
@@ -38,8 +39,16 @@ static void BM_MatmulReferenceAllocationIncluded(benchmark::State& state){
   // The framework multiplies by the iteration count and divides by measured duration producing GFLOP/s.
 }
 
-BENCHMARK(BM_MatmulReferenceAllocationIncluded)
-  ->ArgNames({"M","K","N"})
+static void BM_MatmulReferenceAllocationIncluded(benchmark::State& state) {
+  MatmulAllocationIncluded<inference::matmul_reference>(state);
+}
+
+static void BM_MatmulIkjAllocationIncluded(benchmark::State& state) {
+  MatmulAllocationIncluded<inference::matmul_ikj>(state);
+}
+
+static void MatmulShapes(benchmark::internal::Benchmark* benchmark) {
+  benchmark->ArgNames({"M","K","N"})
   ->Args({1, 1, 1})
   ->Args({32, 32, 32})
   ->Args({128, 128, 128})
@@ -48,3 +57,8 @@ BENCHMARK(BM_MatmulReferenceAllocationIncluded)
   ->Args({1, 256, 256})
   ->Args({256,256,1})
   ->Unit(benchmark::kMicrosecond);
+
+}
+
+BENCHMARK(BM_MatmulReferenceAllocationIncluded)->Apply(MatmulShapes);
+BENCHMARK(BM_MatmulIkjAllocationIncluded)->Apply(MatmulShapes);
