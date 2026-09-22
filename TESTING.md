@@ -59,3 +59,18 @@ pattern 1 uses seed 20260912; patterns 2 and 3 are the fixed formulas above.
 
 The shared tests exposed the original `matmul_ikj` allocation of M-by-K instead
 of M-by-N: ten test groups failed before the one-line result-shape correction.
+
+
+## Benchmark collector checks
+
+With `INFERENCE_BUILD_BENCHMARKS=ON`, CTest also runs
+`benchmark_results_validation` (eight Python regression tests). Run it independently:
+
+```sh
+python3 tests/benchmark_results_tests.py
+```
+
+It covers two implementations sharing shapes, incomplete comparisons, missing
+shapes/repetitions, duplicate indices, incorrect settings, invalid measurements,
+and exclusion of aggregate rows from repetition counts. The Release benchmark
+build passed all four CTest targets before each Step 7 capture.

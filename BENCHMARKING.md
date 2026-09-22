@@ -14,16 +14,26 @@ python3 scripts/run_benchmarks.py --notes "Describe other heavy apps and relevan
 ```
 
 The script configures a Release build with compile-command export, rebuilds,
-runs CTest, then measures all registered shapes with 0.5 seconds of warm-up,
+runs CTest, then measures both implementations across all seven shapes with 0.5 seconds of warm-up,
 at least 1 second of measurement per repetition, and 5 repetitions. It does
 not edit CMakeLists.txt. Use `--warmup`, `--min-time`, `--repetitions`, or
-`--build-dir` to override these defaults. Inherited `BENCHMARK_*` environment
+`--build-dir` to override these defaults. Use `--implementation-order reference-first`
+(the default) followed by `--implementation-order ikj-first` for a counterbalanced
+pair. Each implementation runs in its own process, with sequential repetitions
+in shape registration order; inherited random-interleaving settings are disabled.
+Use `--prevent-idle-sleep` to wrap each timed process in `caffeinate -i`, a
+temporary assertion released when that process exits. This does not change saved
+power settings or prevent lid-close/explicit sleep. The choice is recorded in metadata.
+Inherited `BENCHMARK_*` environment
 settings are removed for this run so they cannot silently change the protocol.
 
 Each invocation creates a unique directory under `benchmark-results/local/`:
 
-- `results.json`: unmodified Google Benchmark output, including individual
-  repetition measurements and aggregate statistics.
+- `results-reference.json` and `results-ikj.json`: unmodified Google Benchmark
+  output, including individual repetitions, aggregate statistics, and context.
+- `results.json`: a combined view of both raw files, with separate `contexts`
+  and a concatenated `benchmarks` list. Schema-version-2 metadata records this
+  distinction and hashes all three files; earlier curated runs retain their original format.
 - `metadata.json`: full commit, dirty state, source hashes, compiler version,
   build configuration, dependency version and commit, machine and power data,
   input generation, timing scope, measured shapes, settings, and exact commands.
@@ -31,7 +41,8 @@ Each invocation creates a unique directory under `benchmark-results/local/`:
   benchmark executable, tests, and Google Benchmark dependency.
 - `source/` and `working-tree.patch`: source snapshot and tracked changes
   relative to the recorded commit, so dirty runs are not attributed to HEAD alone.
-- `configure.log`, `build.log`, `tests.log`, `benchmark.log`: command output,
+- `configure.log`, `build.log`, `tests.log`, `benchmark-reference.log`, and
+  `benchmark-ikj.log`: command output,
   including any warnings from the benchmark framework.
 
 The current input generator has **no random seed**. It uses fixed formulas:
@@ -39,7 +50,10 @@ The current input generator has **no random seed**. It uses fixed formulas:
 `B[i] = float(int(i % 13) - 6) / 6.0f`. The metadata records a null seed and
 these formulas. Keep the protocol description in the script synchronized if
 you change input generation, timing scope, threading, or the GFLOPS formula.
-Shapes are extracted from the actual result names rather than copied manually.
+The collector validates each implementation/shape pair against an explicit
+expected set, including repetition indices, single-thread execution, positive finite
+timings and throughput. Keep `SHAPES` in the collector synchronized with benchmark
+registrations when expanding the experiment. Missing whole cases are errors.
 
 Timing includes output allocation, zero-initialization, multiplication, and
 destruction. Input preparation is excluded. Inputs are reused, caches are not
@@ -48,8 +62,9 @@ GFLOPS uses the conventional `2*M*K*N` count and the default CPU-time basis.
 Wall-clock latency is also present in the raw output. This is allocation-inclusive
 throughput, not a hardware peak measurement.
 
-Power source, macOS power settings, thermal status, and system load are sampled
-before and after measurement. Unavailable fields contain null plus the probe
+Power source, macOS power settings, thermal status, system load, and process
+executable names/CPU usage (without command arguments) are sampled
+before and after measurement, including each implementation capture. Unavailable fields contain null plus the probe
 error; user conditions not supplied through `--notes` are marked unreported.
 The script does not change power settings or stop background applications.
 On Apple Silicon, Google Benchmark may report unreliable CPU frequency metadata;
@@ -287,3 +302,25 @@ Replace the notes text with observed conditions. Step 6's profile findings,
 compiler inspection, and testable hypothesis are documented in
 [PROFILING.md](PROFILING.md). The next experiment is step 7's controlled
 loop-order comparison, using this unprofiled baseline methodology.
+
+## Step 7 loop-order comparison
+
+Both kernels now share one compile-time-parameterized benchmark harness, with
+identical input generation, allocation scope, barriers, counters, and shape list.
+The reference name is preserved. Function selection introduces no per-iteration
+function-pointer dispatch. The parser regression tests run through CTest when
+benchmarks are enabled, or directly with `python3 tests/benchmark_results_tests.py`.
+
+Use two complete captures and retain their source snapshots even for dirty trees:
+
+```sh
+python3 scripts/run_benchmarks.py --warmup 1 --min-time 1 --repetitions 10 --prevent-idle-sleep \
+  --implementation-order reference-first --notes "Actual observed conditions"
+python3 scripts/run_benchmarks.py --warmup 1 --min-time 1 --repetitions 10 --prevent-idle-sleep \
+  --implementation-order ikj-first --notes "Actual observed conditions"
+```
+
+Each capture includes 140 individual measurements. This yields implementation
+order reference, ikj, ikj, reference across the pair. Counterbalancing limits
+order bias but cannot eliminate changing desktop activity or thermal conditions.
+See [MEMORY_ACCESS.md](MEMORY_ACCESS.md) for the hypothesis and comparison results.

@@ -23,6 +23,9 @@ add_test(NAME matrix_copy_assignment COMMAND matrix_copy_assignment_tests)
 option(INFERENCE_BUILD_BENCHMARKS "Build inference benchmarks" OFF)
 
 if(INFERENCE_BUILD_BENCHMARKS)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_test(NAME benchmark_results_validation
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark_results_tests.py)
   include(FetchContent)
 
   set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
