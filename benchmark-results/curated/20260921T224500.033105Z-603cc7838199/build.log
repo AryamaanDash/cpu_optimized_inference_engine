@@ -1,0 +1,7 @@
+[ 12%] Built target inference
+[ 12%] Built target inference_demo
+[ 75%] Built target benchmark
+[ 87%] Built target matrix_tests
+[ 87%] Built target matrix_copy_assignment_tests
+[ 93%] Built target benchmark_main
+[100%] Built target matmul_bench

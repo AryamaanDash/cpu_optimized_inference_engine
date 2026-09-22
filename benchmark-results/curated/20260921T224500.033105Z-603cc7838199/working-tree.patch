@@ -1,0 +1,329 @@
+diff --git a/BENCHMARKING.md b/BENCHMARKING.md
+index 818bf46..0beb9dd 100644
+--- a/BENCHMARKING.md
++++ b/BENCHMARKING.md
+@@ -14,16 +14,26 @@ python3 scripts/run_benchmarks.py --notes "Describe other heavy apps and relevan
+ ```
+ 
+ The script configures a Release build with compile-command export, rebuilds,
+-runs CTest, then measures all registered shapes with 0.5 seconds of warm-up,
++runs CTest, then measures both implementations across all seven shapes with 0.5 seconds of warm-up,
+ at least 1 second of measurement per repetition, and 5 repetitions. It does
+ not edit CMakeLists.txt. Use `--warmup`, `--min-time`, `--repetitions`, or
+-`--build-dir` to override these defaults. Inherited `BENCHMARK_*` environment
++`--build-dir` to override these defaults. Use `--implementation-order reference-first`
++(the default) followed by `--implementation-order ikj-first` for a counterbalanced
++pair. Each implementation runs in its own process, with sequential repetitions
++in shape registration order; inherited random-interleaving settings are disabled.
++Use `--prevent-idle-sleep` to wrap each timed process in `caffeinate -i`, a
++temporary assertion released when that process exits. This does not change saved
++power settings or prevent lid-close/explicit sleep. The choice is recorded in metadata.
++Inherited `BENCHMARK_*` environment
+ settings are removed for this run so they cannot silently change the protocol.
+ 
+ Each invocation creates a unique directory under `benchmark-results/local/`:
+ 
+-- `results.json`: unmodified Google Benchmark output, including individual
+-  repetition measurements and aggregate statistics.
++- `results-reference.json` and `results-ikj.json`: unmodified Google Benchmark
++  output, including individual repetitions, aggregate statistics, and context.
++- `results.json`: a combined view of both raw files, with separate `contexts`
++  and a concatenated `benchmarks` list. Schema-version-2 metadata records this
++  distinction and hashes all three files; earlier curated runs retain their original format.
+ - `metadata.json`: full commit, dirty state, source hashes, compiler version,
+   build configuration, dependency version and commit, machine and power data,
+   input generation, timing scope, measured shapes, settings, and exact commands.
+@@ -31,7 +41,8 @@ Each invocation creates a unique directory under `benchmark-results/local/`:
+   benchmark executable, tests, and Google Benchmark dependency.
+ - `source/` and `working-tree.patch`: source snapshot and tracked changes
+   relative to the recorded commit, so dirty runs are not attributed to HEAD alone.
+-- `configure.log`, `build.log`, `tests.log`, `benchmark.log`: command output,
++- `configure.log`, `build.log`, `tests.log`, `benchmark-reference.log`, and
++  `benchmark-ikj.log`: command output,
+   including any warnings from the benchmark framework.
+ 
+ The current input generator has **no random seed**. It uses fixed formulas:
+@@ -39,7 +50,10 @@ The current input generator has **no random seed**. It uses fixed formulas:
+ `B[i] = float(int(i % 13) - 6) / 6.0f`. The metadata records a null seed and
+ these formulas. Keep the protocol description in the script synchronized if
+ you change input generation, timing scope, threading, or the GFLOPS formula.
+-Shapes are extracted from the actual result names rather than copied manually.
++The collector validates each implementation/shape pair against an explicit
++expected set, including repetition indices, single-thread execution, positive finite
++timings and throughput. Keep `SHAPES` in the collector synchronized with benchmark
++registrations when expanding the experiment. Missing whole cases are errors.
+ 
+ Timing includes output allocation, zero-initialization, multiplication, and
+ destruction. Input preparation is excluded. Inputs are reused, caches are not
+@@ -48,8 +62,9 @@ GFLOPS uses the conventional `2*M*K*N` count and the default CPU-time basis.
+ Wall-clock latency is also present in the raw output. This is allocation-inclusive
+ throughput, not a hardware peak measurement.
+ 
+-Power source, macOS power settings, thermal status, and system load are sampled
+-before and after measurement. Unavailable fields contain null plus the probe
++Power source, macOS power settings, thermal status, system load, and process
++executable names/CPU usage (without command arguments) are sampled
++before and after measurement, including each implementation capture. Unavailable fields contain null plus the probe
+ error; user conditions not supplied through `--notes` are marked unreported.
+ The script does not change power settings or stop background applications.
+ On Apple Silicon, Google Benchmark may report unreliable CPU frequency metadata;
+@@ -287,3 +302,25 @@ Replace the notes text with observed conditions. Step 6's profile findings,
+ compiler inspection, and testable hypothesis are documented in
+ [PROFILING.md](PROFILING.md). The next experiment is step 7's controlled
+ loop-order comparison, using this unprofiled baseline methodology.
++
++## Step 7 loop-order comparison
++
++Both kernels now share one compile-time-parameterized benchmark harness, with
++identical input generation, allocation scope, barriers, counters, and shape list.
++The reference name is preserved. Function selection introduces no per-iteration
++function-pointer dispatch. The parser regression tests run through CTest when
++benchmarks are enabled, or directly with `python3 tests/benchmark_results_tests.py`.
++
++Use two complete captures and retain their source snapshots even for dirty trees:
++
++```sh
++python3 scripts/run_benchmarks.py --warmup 1 --min-time 1 --repetitions 10 --prevent-idle-sleep \
++  --implementation-order reference-first --notes "Actual observed conditions"
++python3 scripts/run_benchmarks.py --warmup 1 --min-time 1 --repetitions 10 --prevent-idle-sleep \
++  --implementation-order ikj-first --notes "Actual observed conditions"
++```
++
++Each capture includes 140 individual measurements. This yields implementation
++order reference, ikj, ikj, reference across the pair. Counterbalancing limits
++order bias but cannot eliminate changing desktop activity or thermal conditions.
++See [MEMORY_ACCESS.md](MEMORY_ACCESS.md) for the hypothesis and comparison results.
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2152fff..8d449f2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -23,6 +23,9 @@ add_test(NAME matrix_copy_assignment COMMAND matrix_copy_assignment_tests)
+ option(INFERENCE_BUILD_BENCHMARKS "Build inference benchmarks" OFF)
+ 
+ if(INFERENCE_BUILD_BENCHMARKS)
++  find_package(Python3 REQUIRED COMPONENTS Interpreter)
++  add_test(NAME benchmark_results_validation
++    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark_results_tests.py)
+   include(FetchContent)
+ 
+   set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+diff --git a/benchmarks/matmul_bench.cpp b/benchmarks/matmul_bench.cpp
+index 026aa71..ec7b104 100644
+--- a/benchmarks/matmul_bench.cpp
++++ b/benchmarks/matmul_bench.cpp
+@@ -3,7 +3,8 @@
+ #include <benchmark/benchmark.h>
+ #include <cstddef>
+ 
+-static void BM_MatmulReferenceAllocationIncluded(benchmark::State& state){
++template <auto Multiply>
++static void MatmulAllocationIncluded(benchmark::State& state){
+ 
+   const auto m = static_cast<std::size_t>(state.range(0));
+   const auto k = static_cast<std::size_t>(state.range(1));
+@@ -20,7 +21,7 @@ static void BM_MatmulReferenceAllocationIncluded(benchmark::State& state){
+     b.data()[i] = static_cast<float>(static_cast<int>(i % 13) - 6) / 6.0f;
+ 
+   for(auto _ : state){
+-    auto result = inference::matmul_reference(a, b);
++    auto result = Multiply(a, b);
+ 
+     auto* output = result.data();
+     benchmark::DoNotOptimize(output);
+@@ -38,8 +39,16 @@ static void BM_MatmulReferenceAllocationIncluded(benchmark::State& state){
+   // The framework multiplies by the iteration count and divides by measured duration producing GFLOP/s.
+ }
+ 
+-BENCHMARK(BM_MatmulReferenceAllocationIncluded)
+-  ->ArgNames({"M","K","N"})
++static void BM_MatmulReferenceAllocationIncluded(benchmark::State& state) {
++  MatmulAllocationIncluded<inference::matmul_reference>(state);
++}
++
++static void BM_MatmulIkjAllocationIncluded(benchmark::State& state) {
++  MatmulAllocationIncluded<inference::matmul_ikj>(state);
++}
++
++static void MatmulShapes(benchmark::internal::Benchmark* benchmark) {
++  benchmark->ArgNames({"M","K","N"})
+   ->Args({1, 1, 1})
+   ->Args({32, 32, 32})
+   ->Args({128, 128, 128})
+@@ -48,3 +57,8 @@ BENCHMARK(BM_MatmulReferenceAllocationIncluded)
+   ->Args({1, 256, 256})
+   ->Args({256,256,1})
+   ->Unit(benchmark::kMicrosecond);
++
++}
++
++BENCHMARK(BM_MatmulReferenceAllocationIncluded)->Apply(MatmulShapes);
++BENCHMARK(BM_MatmulIkjAllocationIncluded)->Apply(MatmulShapes);
+diff --git a/scripts/run_benchmarks.py b/scripts/run_benchmarks.py
+index a3f5546..4d92e17 100644
+--- a/scripts/run_benchmarks.py
++++ b/scripts/run_benchmarks.py
+@@ -15,6 +15,51 @@ import subprocess
+ import sys
+ 
+ ROOT = Path(__file__).resolve().parents[1]
++IMPLEMENTATIONS = {
++    "reference": "BM_MatmulReferenceAllocationIncluded",
++    "ikj": "BM_MatmulIkjAllocationIncluded",
++}
++SHAPES = ((1, 1, 1), (32, 32, 32), (128, 128, 128), (256, 256, 256),
++          (63, 65, 67), (1, 256, 256), (256, 256, 1))
++
++
++def validate_results(rows, repetitions, implementations=None):
++    """Reject incomplete comparisons, duplicate repetitions, and invalid timings."""
++    implementations = tuple(IMPLEMENTATIONS if implementations is None else implementations)
++    names = {IMPLEMENTATIONS[key]: key for key in implementations}
++    expected = {(key, *shape) for key in implementations for shape in SHAPES}
++    samples = [row for row in rows if row.get("run_type") == "iteration"]
++    if not samples or any(row.get("error_occurred") for row in rows):
++        raise RuntimeError("Benchmark produced no samples or reported an error")
++    seen = {}
++    case_order = []
++    for row in samples:
++        match = re.fullmatch(r"([^/]+)/M:(\d+)/K:(\d+)/N:(\d+)", row["name"])
++        if not match or match[1] not in names or row.get("threads") != 1:
++            raise RuntimeError("Results do not match the single-thread implementation/shape protocol")
++        key = (names[match[1]], *map(int, match.groups()[1:]))
++        if key not in expected:
++            raise RuntimeError(f"Unexpected benchmark case: {key}")
++        if key not in seen:
++            seen[key] = set()
++            case_order.append(list(key))
++        index = row.get("repetition_index")
++        if (not isinstance(index, int) or index not in range(repetitions)
++                or index in seen[key] or row.get("repetitions") != repetitions):
++            raise RuntimeError(f"Invalid or duplicate repetition for {key}: {index}")
++        seen[key].add(index)
++        if row.get("time_unit") != "us" or row.get("iterations", 0) <= 0:
++            raise RuntimeError("Invalid timing unit or iteration count")
++        for field in ("cpu_time", "real_time", "GFLOPS"):
++            value = row.get(field, float("nan"))
++            if not math.isfinite(value) or value <= 0:
++                raise RuntimeError(f"Missing or invalid {field}")
++    if set(seen) != expected:
++        raise RuntimeError(f"Missing benchmark cases: {sorted(expected - set(seen))}")
++    if any(len(indices) != repetitions for indices in seen.values()):
++        raise RuntimeError("Actual repetition counts differ from the recorded settings")
++    return {"measurement_rows": len(samples), "case_order": case_order}
++
+ 
+ def now():
+     return datetime.now(timezone.utc).isoformat()
+@@ -55,6 +100,8 @@ def machine_state():
+         "power_source": probe(["/usr/bin/pmset", "-g", "batt"]),
+         "thermal_source": probe(["/usr/bin/pmset", "-g", "therm"]),
+         "load_average": list(os.getloadavg()),
++        # Executable names only: omit command arguments that could contain secrets.
++        "processes": probe(["/bin/ps", "-ww", "-axo", "pcpu=,comm=", "-r"]),
+     }
+ 
+ def positive_seconds(value):
+@@ -69,6 +116,10 @@ def main():
+     parser.add_argument("--warmup", type=positive_seconds, default=0.5)
+     parser.add_argument("--min-time", type=positive_seconds, default=1.0)
+     parser.add_argument("--repetitions", type=int, default=5)
++    parser.add_argument("--implementation-order", choices=("reference-first", "ikj-first"),
++                        default="reference-first")
++    parser.add_argument("--prevent-idle-sleep", action="store_true",
++                        help="Hold a temporary caffeinate -i assertion during each benchmark process")
+     parser.add_argument("--notes", default="User run conditions not reported")
+     args = parser.parse_args()
+     if args.repetitions < 2:
+@@ -76,6 +127,9 @@ def main():
+     if sys.platform != "darwin":
+         parser.error("This metadata collector currently supports macOS")
+ 
++    implementation_order = ["reference", "ikj"]
++    if args.implementation_order == "ikj-first":
++        implementation_order.reverse()
+     build = args.build_dir.resolve()
+     commit = capture(["git", "rev-parse", "HEAD"])
+     status = capture(["git", "status", "--porcelain=v1", "--untracked-files=all"])
+@@ -83,7 +137,7 @@ def main():
+     output = ROOT / "benchmark-results/local" / f"{stamp}-{commit[:12]}"
+     output.mkdir(parents=True, exist_ok=False)
+     metadata = {
+-        "schema_version": 1,
++        "schema_version": 2,
+         "status": "in_progress",
+         "started_at_utc": now(),
+         "git": {"commit": commit, "dirty": bool(status), "status_porcelain": status},
+@@ -105,6 +159,12 @@ def main():
+             "warmup_seconds": args.warmup,
+             "minimum_measurement_seconds": args.min_time,
+             "repetitions": args.repetitions,
++            "implementations": IMPLEMENTATIONS,
++            "shapes_M_K_N": [list(shape) for shape in SHAPES],
++            "implementation_order": implementation_order,
++            "prevent_idle_sleep": args.prevent_idle_sleep,
++            "execution_order": "Separate processes in implementation_order; registration-order shapes; sequential repetitions",
++            "results_format": "results-<implementation>.json are raw; results.json combines their benchmark rows and contexts",
+         },
+     }
+ 
+@@ -169,32 +229,35 @@ def main():
+             "executable_sha256": digest(binary),
+         }
+         metadata["machine_before"] = machine_state()
+-        run([str(binary), f"--benchmark_min_warmup_time={args.warmup}",
+-             f"--benchmark_min_time={args.min_time}s", f"--benchmark_repetitions={args.repetitions}",
+-             "--benchmark_report_aggregates_only=false", "--benchmark_display_aggregates_only=false",
+-             "--benchmark_counters_tabular=true", "--benchmark_out_format=json",
+-             f"--benchmark_out={output / 'results.json'}"], "benchmark.log")
++        combined = {"contexts": {}, "benchmarks": []}
++        metadata["implementation_captures"] = []
++        for implementation in implementation_order:
++            result_path = output / f"results-{implementation}.json"
++            record = {"implementation": implementation, "started_at_utc": now(),
++                      "machine_before": machine_state()}
++            metadata["implementation_captures"].append(record)
++            launcher = ["/usr/bin/caffeinate", "-i"] if args.prevent_idle_sleep else []
++            run([*launcher, str(binary), f"--benchmark_filter=^{IMPLEMENTATIONS[implementation]}/",
++                 f"--benchmark_min_warmup_time={args.warmup}",
++                 f"--benchmark_min_time={args.min_time}s", f"--benchmark_repetitions={args.repetitions}",
++                 "--benchmark_enable_random_interleaving=false",
++                 "--benchmark_report_aggregates_only=false", "--benchmark_display_aggregates_only=false",
++                 "--benchmark_counters_tabular=true", "--benchmark_out_format=json",
++                 f"--benchmark_out={result_path}"], f"benchmark-{implementation}.log")
++            record["finished_at_utc"] = now()
++            record["machine_after"] = machine_state()
++            results = json.loads(result_path.read_text())
++            record.update(validate_results(results["benchmarks"], args.repetitions, [implementation]))
++            record["results_file"] = result_path.name
++            record["results_sha256"] = digest(result_path)
++            combined["contexts"][implementation] = results["context"]
++            combined["benchmarks"].extend(results["benchmarks"])
++            save_metadata()
+         metadata["machine_after"] = machine_state()
+-        results = json.loads((output / "results.json").read_text())
+-        rows = results["benchmarks"]
+-        samples = [row for row in rows if row.get("run_type") == "iteration"]
+-        if not samples or any(row.get("error_occurred") for row in rows):
+-            raise RuntimeError("Benchmark produced no samples or reported an error")
+-        shapes = set()
+-        counts = {}
+-        for row in samples:
+-            match = re.search(r"/M:(\d+)/K:(\d+)/N:(\d+)", row["name"])
+-            if not match or row["threads"] != 1:
+-                raise RuntimeError("Results do not match the recorded single-thread matmul protocol")
+-            shape = tuple(map(int, match.groups()))
+-            shapes.add(shape)
+-            counts[shape] = counts.get(shape, 0) + 1
+-            if not math.isfinite(row.get("GFLOPS", float("nan"))):
+-                raise RuntimeError("Results are missing finite GFLOPS measurements")
+-        if any(count != args.repetitions for count in counts.values()):
+-            raise RuntimeError("Actual repetition counts differ from the recorded settings")
+-        metadata["protocol"]["shapes_M_K_N"] = [list(shape) for shape in sorted(shapes)]
+-        metadata["measurement_rows"] = len(samples)
++        validation = validate_results(combined["benchmarks"], args.repetitions)
++        metadata["measurement_rows"] = validation["measurement_rows"]
++        metadata["protocol"]["case_order"] = validation["case_order"]
++        (output / "results.json").write_text(json.dumps(combined, indent=2) + "\n")
+         metadata["results_sha256"] = digest(output / "results.json")
+         changed = [name for name, value in hashes.items()
+                    if not (ROOT / name).is_file() or digest(ROOT / name) != value]
