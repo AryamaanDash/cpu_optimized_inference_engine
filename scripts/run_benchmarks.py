@@ -15,6 +15,51 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+IMPLEMENTATIONS = {
+    "reference": "BM_MatmulReferenceAllocationIncluded",
+    "ikj": "BM_MatmulIkjAllocationIncluded",
+}
+SHAPES = ((1, 1, 1), (32, 32, 32), (128, 128, 128), (256, 256, 256),
+          (63, 65, 67), (1, 256, 256), (256, 256, 1))
+
+
+def validate_results(rows, repetitions, implementations=None):
+    """Reject incomplete comparisons, duplicate repetitions, and invalid timings."""
+    implementations = tuple(IMPLEMENTATIONS if implementations is None else implementations)
+    names = {IMPLEMENTATIONS[key]: key for key in implementations}
+    expected = {(key, *shape) for key in implementations for shape in SHAPES}
+    samples = [row for row in rows if row.get("run_type") == "iteration"]
+    if not samples or any(row.get("error_occurred") for row in rows):
+        raise RuntimeError("Benchmark produced no samples or reported an error")
+    seen = {}
+    case_order = []
+    for row in samples:
+        match = re.fullmatch(r"([^/]+)/M:(\d+)/K:(\d+)/N:(\d+)", row["name"])
+        if not match or match[1] not in names or row.get("threads") != 1:
+            raise RuntimeError("Results do not match the single-thread implementation/shape protocol")
+        key = (names[match[1]], *map(int, match.groups()[1:]))
+        if key not in expected:
+            raise RuntimeError(f"Unexpected benchmark case: {key}")
+        if key not in seen:
+            seen[key] = set()
+            case_order.append(list(key))
+        index = row.get("repetition_index")
+        if (not isinstance(index, int) or index not in range(repetitions)
+                or index in seen[key] or row.get("repetitions") != repetitions):
+            raise RuntimeError(f"Invalid or duplicate repetition for {key}: {index}")
+        seen[key].add(index)
+        if row.get("time_unit") != "us" or row.get("iterations", 0) <= 0:
+            raise RuntimeError("Invalid timing unit or iteration count")
+        for field in ("cpu_time", "real_time", "GFLOPS"):
+            value = row.get(field, float("nan"))
+            if not math.isfinite(value) or value <= 0:
+                raise RuntimeError(f"Missing or invalid {field}")
+    if set(seen) != expected:
+        raise RuntimeError(f"Missing benchmark cases: {sorted(expected - set(seen))}")
+    if any(len(indices) != repetitions for indices in seen.values()):
+        raise RuntimeError("Actual repetition counts differ from the recorded settings")
+    return {"measurement_rows": len(samples), "case_order": case_order}
+
 
 def now():
     return datetime.now(timezone.utc).isoformat()
@@ -55,6 +100,8 @@ def machine_state():
         "power_source": probe(["/usr/bin/pmset", "-g", "batt"]),
         "thermal_source": probe(["/usr/bin/pmset", "-g", "therm"]),
         "load_average": list(os.getloadavg()),
+        # Executable names only: omit command arguments that could contain secrets.
+        "processes": probe(["/bin/ps", "-ww", "-axo", "pcpu=,comm=", "-r"]),
     }
 
 def positive_seconds(value):
@@ -69,6 +116,10 @@ def main():
     parser.add_argument("--warmup", type=positive_seconds, default=0.5)
     parser.add_argument("--min-time", type=positive_seconds, default=1.0)
     parser.add_argument("--repetitions", type=int, default=5)
+    parser.add_argument("--implementation-order", choices=("reference-first", "ikj-first"),
+                        default="reference-first")
+    parser.add_argument("--prevent-idle-sleep", action="store_true",
+                        help="Hold a temporary caffeinate -i assertion during each benchmark process")
     parser.add_argument("--notes", default="User run conditions not reported")
     args = parser.parse_args()
     if args.repetitions < 2:
@@ -76,6 +127,9 @@ def main():
     if sys.platform != "darwin":
         parser.error("This metadata collector currently supports macOS")
 
+    implementation_order = ["reference", "ikj"]
+    if args.implementation_order == "ikj-first":
+        implementation_order.reverse()
     build = args.build_dir.resolve()
     commit = capture(["git", "rev-parse", "HEAD"])
     status = capture(["git", "status", "--porcelain=v1", "--untracked-files=all"])
@@ -83,7 +137,7 @@ def main():
     output = ROOT / "benchmark-results/local" / f"{stamp}-{commit[:12]}"
     output.mkdir(parents=True, exist_ok=False)
     metadata = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "in_progress",
         "started_at_utc": now(),
         "git": {"commit": commit, "dirty": bool(status), "status_porcelain": status},
@@ -105,6 +159,12 @@ def main():
             "warmup_seconds": args.warmup,
             "minimum_measurement_seconds": args.min_time,
             "repetitions": args.repetitions,
+            "implementations": IMPLEMENTATIONS,
+            "shapes_M_K_N": [list(shape) for shape in SHAPES],
+            "implementation_order": implementation_order,
+            "prevent_idle_sleep": args.prevent_idle_sleep,
+            "execution_order": "Separate processes in implementation_order; registration-order shapes; sequential repetitions",
+            "results_format": "results-<implementation>.json are raw; results.json combines their benchmark rows and contexts",
         },
     }
 
@@ -169,32 +229,35 @@ def main():
             "executable_sha256": digest(binary),
         }
         metadata["machine_before"] = machine_state()
-        run([str(binary), f"--benchmark_min_warmup_time={args.warmup}",
-             f"--benchmark_min_time={args.min_time}s", f"--benchmark_repetitions={args.repetitions}",
-             "--benchmark_report_aggregates_only=false", "--benchmark_display_aggregates_only=false",
-             "--benchmark_counters_tabular=true", "--benchmark_out_format=json",
-             f"--benchmark_out={output / 'results.json'}"], "benchmark.log")
+        combined = {"contexts": {}, "benchmarks": []}
+        metadata["implementation_captures"] = []
+        for implementation in implementation_order:
+            result_path = output / f"results-{implementation}.json"
+            record = {"implementation": implementation, "started_at_utc": now(),
+                      "machine_before": machine_state()}
+            metadata["implementation_captures"].append(record)
+            launcher = ["/usr/bin/caffeinate", "-i"] if args.prevent_idle_sleep else []
+            run([*launcher, str(binary), f"--benchmark_filter=^{IMPLEMENTATIONS[implementation]}/",
+                 f"--benchmark_min_warmup_time={args.warmup}",
+                 f"--benchmark_min_time={args.min_time}s", f"--benchmark_repetitions={args.repetitions}",
+                 "--benchmark_enable_random_interleaving=false",
+                 "--benchmark_report_aggregates_only=false", "--benchmark_display_aggregates_only=false",
+                 "--benchmark_counters_tabular=true", "--benchmark_out_format=json",
+                 f"--benchmark_out={result_path}"], f"benchmark-{implementation}.log")
+            record["finished_at_utc"] = now()
+            record["machine_after"] = machine_state()
+            results = json.loads(result_path.read_text())
+            record.update(validate_results(results["benchmarks"], args.repetitions, [implementation]))
+            record["results_file"] = result_path.name
+            record["results_sha256"] = digest(result_path)
+            combined["contexts"][implementation] = results["context"]
+            combined["benchmarks"].extend(results["benchmarks"])
+            save_metadata()
         metadata["machine_after"] = machine_state()
-        results = json.loads((output / "results.json").read_text())
-        rows = results["benchmarks"]
-        samples = [row for row in rows if row.get("run_type") == "iteration"]
-        if not samples or any(row.get("error_occurred") for row in rows):
-            raise RuntimeError("Benchmark produced no samples or reported an error")
-        shapes = set()
-        counts = {}
-        for row in samples:
-            match = re.search(r"/M:(\d+)/K:(\d+)/N:(\d+)", row["name"])
-            if not match or row["threads"] != 1:
-                raise RuntimeError("Results do not match the recorded single-thread matmul protocol")
-            shape = tuple(map(int, match.groups()))
-            shapes.add(shape)
-            counts[shape] = counts.get(shape, 0) + 1
-            if not math.isfinite(row.get("GFLOPS", float("nan"))):
-                raise RuntimeError("Results are missing finite GFLOPS measurements")
-        if any(count != args.repetitions for count in counts.values()):
-            raise RuntimeError("Actual repetition counts differ from the recorded settings")
-        metadata["protocol"]["shapes_M_K_N"] = [list(shape) for shape in sorted(shapes)]
-        metadata["measurement_rows"] = len(samples)
+        validation = validate_results(combined["benchmarks"], args.repetitions)
+        metadata["measurement_rows"] = validation["measurement_rows"]
+        metadata["protocol"]["case_order"] = validation["case_order"]
+        (output / "results.json").write_text(json.dumps(combined, indent=2) + "\n")
         metadata["results_sha256"] = digest(output / "results.json")
         changed = [name for name, value in hashes.items()
                    if not (ROOT / name).is_file() or digest(ROOT / name) != value]
