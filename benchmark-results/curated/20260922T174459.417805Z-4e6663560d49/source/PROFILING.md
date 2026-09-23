@@ -121,9 +121,9 @@ or compute-bound kernel. No hardware-counter measurements were collected.
 ## Testable hypothesis for step 7
 
 The concrete experiment definition, controls, and decision criteria are recorded
-in [MEMORY_ACCESS.md](MEMORY_ACCESS.md). Step 7 is now complete, including size
-sweeps and inspection of both kernels; see [the new compiler evidence](profiles/step7-inspection/README.md).
-The Step 6 evidence below remains the original baseline.
+in [MEMORY_ACCESS.md](MEMORY_ACCESS.md), which now also records shared correctness
+coverage and four loop-order benchmark captures. Size sweeps and inspection of
+the new variant remain pending. The Step 6 evidence below is the original baseline.
 
 **Hypothesis:** for larger `N>1` workloads, changing loop order from
 `row → col → k` to `row → k → col` will reduce allocation-inclusive CPU time by

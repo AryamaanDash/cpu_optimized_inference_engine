@@ -1,0 +1,299 @@
+diff --git a/BENCHMARKING.md b/BENCHMARKING.md
+index 0beb9dd..9453399 100644
+--- a/BENCHMARKING.md
++++ b/BENCHMARKING.md
+@@ -14,7 +14,7 @@ python3 scripts/run_benchmarks.py --notes "Describe other heavy apps and relevan
+ ```
+ 
+ The script configures a Release build with compile-command export, rebuilds,
+-runs CTest, then measures both implementations across all seven shapes with 0.5 seconds of warm-up,
++runs CTest, then measures both implementations across the selected suite with 0.5 seconds of warm-up,
+ at least 1 second of measurement per repetition, and 5 repetitions. It does
+ not edit CMakeLists.txt. Use `--warmup`, `--min-time`, `--repetitions`, or
+ `--build-dir` to override these defaults. Use `--implementation-order reference-first`
+@@ -52,8 +52,9 @@ these formulas. Keep the protocol description in the script synchronized if
+ you change input generation, timing scope, threading, or the GFLOPS formula.
+ The collector validates each implementation/shape pair against an explicit
+ expected set, including repetition indices, single-thread execution, positive finite
+-timings and throughput. Keep `SHAPES` in the collector synchronized with benchmark
+-registrations when expanding the experiment. Missing whole cases are errors.
++timings and throughput. Keep the suite definitions in the collector synchronized with benchmark
++registrations when expanding the experiment. Historical summaries use the shape
++manifest saved in each capture instead of the current suite definitions. Missing whole cases are errors.
+ 
+ Timing includes output allocation, zero-initialization, multiplication, and
+ destruction. Input preparation is excluded. Inputs are reused, caches are not
+@@ -324,3 +325,28 @@ Each capture includes 140 individual measurements. This yields implementation
+ order reference, ikj, ikj, reference across the pair. Counterbalancing limits
+ order bias but cannot eliminate changing desktop activity or thermal conditions.
+ See [MEMORY_ACCESS.md](MEMORY_ACCESS.md) for the hypothesis and comparison results.
++
++## Step 7 size and vector sweeps
++
++`--suite baseline` (the default) selects the original seven shapes, even though
++the executable also registers the expanded cases. `--suite memory-access` selects
++24 shapes: both vector orientations at sizes 64, 128, 255, 256, 257, 512, 1024,
++and (32,256,N) for N = 1, 4, 16, 17, 64, 255, 256, 257, 512, 1024.
++The N=17 case checks the scalar/vector transition identified in compiler inspection.
++The collector uses an exact anchored filter and validates the selected suite only.
++This keeps the original baseline independently reproducible and avoids duplicate
++registrations for vector size 256. The two families are analyzed separately.
++
++```sh
++python3 scripts/run_benchmarks.py --suite memory-access \
++  --warmup 1 --min-time 1 --repetitions 10 --prevent-idle-sleep \
++  --implementation-order reference-first --notes "Actual observed conditions"
++python3 scripts/run_benchmarks.py --suite memory-access \
++  --warmup 1 --min-time 1 --repetitions 10 --prevent-idle-sleep \
++  --implementation-order ikj-first --notes "Actual observed conditions"
++```
++
++Each expanded capture retains 480 individual measurements. The summarizer adds
++`storage_bytes = 4*(M*K + K*N + M*N)` and `reference_B_stride_bytes = 4*N`
++while retaining CPU/real timing and variability. Storage is an allocation footprint,
++not an assertion that every byte is active in a particular cache.
+diff --git a/TESTING.md b/TESTING.md
+index cb5a95c..d9b61b7 100644
+--- a/TESTING.md
++++ b/TESTING.md
+@@ -27,9 +27,9 @@ identities, cancellation, immutable inputs, and shared-input/output ownership.
+ The original 1,536 deterministic oracle cases run for each implementation with
+ unchanged small-case tolerances.
+ 
+-Each implementation also runs 48 larger-oracle cases: all seven benchmark shapes
+-plus (3,255,5), (5,257,3), (1,1024,17), (17,1024,1), and (3,1025,7), each with
+-four input patterns. Patterns are deterministic random seeds 17 and 20260912,
++Each implementation also runs 136 larger-oracle cases: all 29 registered benchmark
++shapes (the seven baseline cases and vector/width sweeps) plus (3,255,5),
++(5,257,3), (1,1024,17), (17,1024,1), and (3,1025,7), each with four input patterns. Patterns are deterministic random seeds 17 and 20260912,
+ the exact benchmark formulas, and alternating-sign binary fractions. Oracle
+ fixtures use separate A rows and B columns, double accumulation, and comparison
+ to the unrounded double result. They do not use a production kernel as the oracle.
+@@ -64,13 +64,14 @@ of M-by-N: ten test groups failed before the one-line result-shape correction.
+ ## Benchmark collector checks
+ 
+ With `INFERENCE_BUILD_BENCHMARKS=ON`, CTest also runs
+-`benchmark_results_validation` (eight Python regression tests). Run it independently:
++`benchmark_results_validation` (ten Python regression tests). Run it independently:
+ 
+ ```sh
+ python3 tests/benchmark_results_tests.py
+ ```
+ 
+-It covers two implementations sharing shapes, incomplete comparisons, missing
++It covers historical and expanded shape manifests, rejects invalid manifests, and checks
++two implementations sharing shapes, incomplete comparisons, missing
+ shapes/repetitions, duplicate indices, incorrect settings, invalid measurements,
+ and exclusion of aggregate rows from repetition counts. The Release benchmark
+ build passed all four CTest targets before each Step 7 capture.
+diff --git a/benchmarks/matmul_bench.cpp b/benchmarks/matmul_bench.cpp
+index ec7b104..613f50c 100644
+--- a/benchmarks/matmul_bench.cpp
++++ b/benchmarks/matmul_bench.cpp
+@@ -57,6 +57,14 @@ static void MatmulShapes(benchmark::internal::Benchmark* benchmark) {
+   ->Args({1, 256, 256})
+   ->Args({256,256,1})
+   ->Unit(benchmark::kMicrosecond);
++  for (const int size: {64, 128, 255, 257, 512, 1024}){
++    benchmark->Args({1, size, size});
++    benchmark->Args({size, size, 1});
++  }
++  // Hold M and K fixed while varying B stride and output-row width.
++  for (const int width : {1, 4, 16, 17, 64, 255, 256, 257, 512, 1024}) {
++    benchmark->Args({32, 256, width});
++  }
+ 
+ }
+ 
+diff --git a/scripts/run_benchmarks.py b/scripts/run_benchmarks.py
+index 4d92e17..bc18556 100644
+--- a/scripts/run_benchmarks.py
++++ b/scripts/run_benchmarks.py
+@@ -22,12 +22,23 @@ IMPLEMENTATIONS = {
+ SHAPES = ((1, 1, 1), (32, 32, 32), (128, 128, 128), (256, 256, 256),
+           (63, 65, 67), (1, 256, 256), (256, 256, 1))
+ 
++VECTOR_SIZES = (64, 128, 255, 256, 257, 512, 1024)
++WIDTHS = (1, 4, 16, 17, 64, 255, 256, 257, 512, 1024)
++MEMORY_ACCESS_SHAPES = tuple(shape for size in VECTOR_SIZES
++                             for shape in ((1, size, size), (size, size, 1))) + tuple(
++                                 (32, 256, width) for width in WIDTHS)
++SUITES = {"baseline": SHAPES, "memory-access": MEMORY_ACCESS_SHAPES}
+ 
+-def validate_results(rows, repetitions, implementations=None):
++
++def validate_results(rows, repetitions, implementations=None, shapes=None):
+     """Reject incomplete comparisons, duplicate repetitions, and invalid timings."""
+     implementations = tuple(IMPLEMENTATIONS if implementations is None else implementations)
+     names = {IMPLEMENTATIONS[key]: key for key in implementations}
+-    expected = {(key, *shape) for key in implementations for shape in SHAPES}
++    shapes = tuple(tuple(shape) for shape in (SHAPES if shapes is None else shapes))
++    if (not shapes or any(len(shape) != 3 or any(type(x) is not int or x <= 0 for x in shape)
++                          for shape in shapes) or len(set(shapes)) != len(shapes)):
++        raise RuntimeError("Expected shapes must be unique positive integer triples")
++    expected = {(key, *shape) for key in implementations for shape in shapes}
+     samples = [row for row in rows if row.get("run_type") == "iteration"]
+     if not samples or any(row.get("error_occurred") for row in rows):
+         raise RuntimeError("Benchmark produced no samples or reported an error")
+@@ -112,6 +123,7 @@ def positive_seconds(value):
+ 
+ def main():
+     parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--suite", choices=tuple(SUITES), default="baseline")
+     parser.add_argument("--build-dir", type=Path, default=ROOT / "build/benchmark-release")
+     parser.add_argument("--warmup", type=positive_seconds, default=0.5)
+     parser.add_argument("--min-time", type=positive_seconds, default=1.0)
+@@ -127,6 +139,7 @@ def main():
+     if sys.platform != "darwin":
+         parser.error("This metadata collector currently supports macOS")
+ 
++    shapes = SUITES[args.suite]
+     implementation_order = ["reference", "ikj"]
+     if args.implementation_order == "ikj-first":
+         implementation_order.reverse()
+@@ -160,7 +173,8 @@ def main():
+             "minimum_measurement_seconds": args.min_time,
+             "repetitions": args.repetitions,
+             "implementations": IMPLEMENTATIONS,
+-            "shapes_M_K_N": [list(shape) for shape in SHAPES],
++            "shapes_M_K_N": [list(shape) for shape in shapes],
++            "suite": args.suite,
+             "implementation_order": implementation_order,
+             "prevent_idle_sleep": args.prevent_idle_sleep,
+             "execution_order": "Separate processes in implementation_order; registration-order shapes; sequential repetitions",
+@@ -237,7 +251,9 @@ def main():
+                       "machine_before": machine_state()}
+             metadata["implementation_captures"].append(record)
+             launcher = ["/usr/bin/caffeinate", "-i"] if args.prevent_idle_sleep else []
+-            run([*launcher, str(binary), f"--benchmark_filter=^{IMPLEMENTATIONS[implementation]}/",
++            shape_pattern = "|".join(f"M:{m}/K:{k}/N:{n}" for m, k, n in shapes)
++            benchmark_filter = f"^{IMPLEMENTATIONS[implementation]}/({shape_pattern})$"
++            run([*launcher, str(binary), f"--benchmark_filter={benchmark_filter}",
+                  f"--benchmark_min_warmup_time={args.warmup}",
+                  f"--benchmark_min_time={args.min_time}s", f"--benchmark_repetitions={args.repetitions}",
+                  "--benchmark_enable_random_interleaving=false",
+@@ -247,14 +263,14 @@ def main():
+             record["finished_at_utc"] = now()
+             record["machine_after"] = machine_state()
+             results = json.loads(result_path.read_text())
+-            record.update(validate_results(results["benchmarks"], args.repetitions, [implementation]))
++            record.update(validate_results(results["benchmarks"], args.repetitions, [implementation], shapes))
+             record["results_file"] = result_path.name
+             record["results_sha256"] = digest(result_path)
+             combined["contexts"][implementation] = results["context"]
+             combined["benchmarks"].extend(results["benchmarks"])
+             save_metadata()
+         metadata["machine_after"] = machine_state()
+-        validation = validate_results(combined["benchmarks"], args.repetitions)
++        validation = validate_results(combined["benchmarks"], args.repetitions, shapes=shapes)
+         metadata["measurement_rows"] = validation["measurement_rows"]
+         metadata["protocol"]["case_order"] = validation["case_order"]
+         (output / "results.json").write_text(json.dumps(combined, indent=2) + "\n")
+diff --git a/scripts/summarize_benchmarks.py b/scripts/summarize_benchmarks.py
+index d439e78..32a284c 100644
+--- a/scripts/summarize_benchmarks.py
++++ b/scripts/summarize_benchmarks.py
+@@ -7,7 +7,7 @@ import math
+ from pathlib import Path
+ import statistics
+ 
+-from run_benchmarks import IMPLEMENTATIONS, SHAPES, digest, validate_results
++from run_benchmarks import IMPLEMENTATIONS, digest, validate_results
+ 
+ 
+ def summarize(folder):
+@@ -32,11 +32,12 @@ def summarize(folder):
+     if raw_rows != combined["benchmarks"]:
+         raise ValueError("Combined result differs from raw results")
+     repetitions = metadata["protocol"]["repetitions"]
+-    validation = validate_results(raw_rows, repetitions)
++    shapes = metadata["protocol"]["shapes_M_K_N"]
++    validation = validate_results(raw_rows, repetitions, shapes=shapes)
+     if validation["measurement_rows"] != metadata["measurement_rows"]:
+         raise ValueError("Metadata measurement count differs from raw results")
+     summaries = []
+-    for m, k, n in SHAPES:
++    for m, k, n in shapes:
+         pair = []
+         for implementation, prefix in IMPLEMENTATIONS.items():
+             name = f"{prefix}/M:{m}/K:{k}/N:{n}"
+@@ -58,6 +59,8 @@ def summarize(folder):
+             pair.append({
+                 "run": folder.name, "implementation": implementation,
+                 "M": m, "K": k, "N": n, "repetitions": len(rows),
++                "storage_bytes": 4 * (m * k + k * n + m * n),
++                "reference_B_stride_bytes": 4 * n,
+                 "median_cpu_us": median, "cpu_cv_percent": 100 * cv,
+                 "min_cpu_us": min(times), "max_cpu_us": max(times),
+                 "median_gflops": statistics.median(r["GFLOPS"] for r in rows),
+diff --git a/tests/benchmark_results_tests.py b/tests/benchmark_results_tests.py
+index bbe5a6e..3703799 100644
+--- a/tests/benchmark_results_tests.py
++++ b/tests/benchmark_results_tests.py
+@@ -6,7 +6,7 @@ import sys
+ import unittest
+ 
+ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+-from run_benchmarks import IMPLEMENTATIONS, SHAPES, validate_results
++from run_benchmarks import IMPLEMENTATIONS, SHAPES, MEMORY_ACCESS_SHAPES, validate_results
+ 
+ 
+ class ResultValidationTests(unittest.TestCase):
+@@ -64,6 +64,25 @@ class ResultValidationTests(unittest.TestCase):
+         rows = self.rows + [{"run_type": "aggregate", "name": "summary"}]
+         self.assertEqual(validate_results(rows, 2)["measurement_rows"], 28)
+ 
++    def test_memory_access_suite_and_saved_shape_manifest(self):
++        rows = [dict(self.rows[0], name=f"{prefix}/M:{m}/K:{k}/N:{n}",
++                     repetition_index=index)
++                for prefix in IMPLEMENTATIONS.values()
++                for m, k, n in MEMORY_ACCESS_SHAPES for index in range(2)]
++        manifest = [list(shape) for shape in MEMORY_ACCESS_SHAPES]
++        self.assertEqual(validate_results(rows, 2, shapes=manifest)["measurement_rows"], 4 * len(MEMORY_ACCESS_SHAPES))
++        with self.assertRaisesRegex(RuntimeError, "Unexpected benchmark case"):
++            validate_results(rows, 2)
++        with self.assertRaisesRegex(RuntimeError, "Missing benchmark cases"):
++            validate_results(rows[2:], 2, shapes=manifest)
++        # Historical captures still validate against their own seven-shape manifest.
++        self.assertEqual(validate_results(self.rows, 2, shapes=SHAPES)["measurement_rows"], 28)
++
++    def test_invalid_shape_manifest(self):
++        for shapes in ([], [(1, 1, 1), (1, 1, 1)], [(0, 1, 1)], [(1, 1)], [(1.0, 1, 1)]):
++            with self.subTest(shapes=shapes), self.assertRaisesRegex(RuntimeError, "Expected shapes"):
++                validate_results(self.rows, 2, shapes=shapes)
++
+ 
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/tests/matrix_tests.cpp b/tests/matrix_tests.cpp
+index 0700712..5a517b5 100644
+--- a/tests/matrix_tests.cpp
++++ b/tests/matrix_tests.cpp
+@@ -657,13 +657,15 @@ void dot_error_bound_checks() {
+ 
+ void matmul_large_reductions(Matmul multiply) {
+     struct Shape { std::size_t m, k, n; };
+-    // All seven benchmark shapes, plus awkward and longer reductions in both
+-    // vector orientations and a non-square matrix case. Avoid a large cubic grid.
++    // Every baseline and memory-access benchmark shape plus longer reductions.
++    // Keep the oracle independent of production indexing and traversal.
+     for (const auto [m, k, n] : {
+              Shape{1, 1, 1}, Shape{32, 32, 32}, Shape{128, 128, 128},
+              Shape{256, 256, 256}, Shape{63, 65, 67}, Shape{1, 256, 256},
+              Shape{256, 256, 1}, Shape{3, 255, 5}, Shape{5, 257, 3},
+-             Shape{1, 1024, 17}, Shape{17, 1024, 1}, Shape{3, 1025, 7}}) {
++             Shape{1, 1024, 17}, Shape{17, 1024, 1}, Shape{3, 1025, 7},
++             Shape{1, 64, 64}, Shape{64, 64, 1}, Shape{1, 128, 128}, Shape{128, 128, 1}, Shape{1, 255, 255}, Shape{255, 255, 1}, Shape{1, 257, 257}, Shape{257, 257, 1}, Shape{1, 512, 512}, Shape{512, 512, 1}, Shape{1, 1024, 1024}, Shape{1024, 1024, 1},
++             Shape{32, 256, 1}, Shape{32, 256, 4}, Shape{32, 256, 16}, Shape{32, 256, 17}, Shape{32, 256, 64}, Shape{32, 256, 255}, Shape{32, 256, 256}, Shape{32, 256, 257}, Shape{32, 256, 512}, Shape{32, 256, 1024}}) {
+         // Two random fixtures, exact benchmark inputs, and cancellation-heavy
+         // binary fractions. The latter sum to zero for even K and one residual
+         // product for odd K, so relative-only tolerances would be inappropriate.
+@@ -764,7 +766,7 @@ int main() {
+         void (*run)(Matmul);
+     };
+     const KernelTest kernel_tests[] = {
+-        {"matmul 48 benchmark and long-reduction oracle cases", matmul_large_reductions},
++        {"matmul 136 benchmark and long-reduction oracle cases", matmul_large_reductions},
+         {"matmul square", matmul_square},
+         {"matmul rectangular", matmul_rectangular},
+         {"matmul incompatible shapes", matmul_incompatible_shapes},

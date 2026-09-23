@@ -1,13 +1,9 @@
 # Step 7: Memory access experiments
 
-**Roadmap Step 7 is complete.** Parts 6–8 add two 24-shape captures (960
-measurements), compiler and executable inspection, and a measured starting point
-for cache blocking. See **Parts 6–8: final analysis** below. Both kernels are
-retained: ikj benefits the tested wider outputs but loses the N=1 workloads.
-Debug, Release, sanitizer, and collector checks pass. No tiled kernel or runtime
-dispatch has been introduced; those are future work.
-
-The first experiment and September 21 evidence below are preserved as history.
+Status: Parts 1–5 are complete: both kernels pass correctness checks, the benchmark
+collector supports both implementations, and four full captures are preserved below.
+The size/vector sweeps (Part 6) and new compiler inspection (Part 7) remain pending;
+Step 7 as a whole is not complete. CPU-time findings have the limitations below.
 
 ## Experiment 1: row-col-k versus row-k-col
 
@@ -256,7 +252,7 @@ framework aggregates and the `2*M*K*N` throughput formula.
 | (1,256,256) | 47.135701 | 4.878220 | 0.53 | 0.83 | 2.781 | 26.869 | 9.662× |
 | (256,256,1) | 26.821520 | 187.923397 | 0.60 | 2.52 | 4.887 | 0.697 | 0.143× |
 
-### Interpretation and next work at the end of Parts 4–5
+### Interpretation and next work
 
 The large-square, awkward rectangular, and row-vector cases favor ikj in all
 four captures, while matrix-times-column-vector favors the reference in all
@@ -265,11 +261,11 @@ larger benefit. The tiny (1,1,1) case changes direction across captures and
 is inconclusive; do not claim an overhead improvement from it.
 
 The source-level locality hypothesis is consistent with the primary result,
-but new assembly inspection was still needed at that stage (now completed below): the reordered loop also changes
+but new assembly inspection is still needed: the reordered loop also changes
 C traffic, accumulator dependencies, bounds-check placement, and opportunities
 for auto-vectorization. These CPU-time measurements do not isolate cache effects.
 
-The next planned task was to expand the matrix-vector and size sweeps in Part 6 while keeping
+Next, expand the matrix-vector and size sweeps described in Part 6 while keeping
 the kernel code and timing contract fixed. Preserve the current seven-shape
 results as a distinct experiment. Include correctness coverage for newly added
 shapes and update the collector's expected shape set and parser test counts.
@@ -293,225 +289,3 @@ python3 scripts/summarize_benchmarks.py \
 To collect a new counterbalanced pair, use the commands in
 [BENCHMARKING.md](BENCHMARKING.md), record actual conditions, keep the machine
 awake, and inspect both CPU variability and wall-time gaps before interpreting it.
-
-
-## Parts 6–8: final analysis — September 22, 2026
-
-### Part 6: size and matrix-vector experiments
-
-The experiment extends the user's vector registrations without changing either
-kernel. It covers (1,S,S) and (S,S,1) at S = 64, 128, 255, 256, 257, 512, 1024,
-plus (32,256,N) at N = 1, 4, 16, 17, 64, 255, 256, 257, 512, 1024. The N=17
-case was added before measurement after compiler inspection identified a vector
-path that starts there. The width sweep holds M and K fixed; the two vector
-orientations are reported separately. These are controlled shape experiments,
-not changes to multiple kernel optimizations at once.
-
-Two complete captures, E and F, used opposite implementation orders, one-second
-warm-up, a minimum of one CPU second per repetition, ten repetitions per case,
-single-thread execution, and temporary `caffeinate -i` assertions. Inputs and
-allocation-inclusive timing remain identical between implementations. Each
-capture contains 480 measurements, for **960 new measurements**; all are retained.
-The previous A–D captures remain separate evidence, not pooled with this pair.
-
-| Run | Order | UTC interval | Battery at boundaries |
-|---|---|---|---|
-| E | reference → ikj | 17:44:59–17:58:06 | 48% → 41% |
-| F | ikj → reference | 17:58:20–18:11:37 | 41% → 35% |
-
-- Run E: [metadata and source manifest](benchmark-results/curated/20260922T174459.417805Z-4e6663560d49/metadata.json), [reference raw results](benchmark-results/curated/20260922T174459.417805Z-4e6663560d49/results-reference.json), [ikj raw results](benchmark-results/curated/20260922T174459.417805Z-4e6663560d49/results-ikj.json), [test log](benchmark-results/curated/20260922T174459.417805Z-4e6663560d49/tests.log).
-- Run F: [metadata and source manifest](benchmark-results/curated/20260922T175820.676435Z-4e6663560d49/metadata.json), [reference raw results](benchmark-results/curated/20260922T175820.676435Z-4e6663560d49/results-reference.json), [ikj raw results](benchmark-results/curated/20260922T175820.676435Z-4e6663560d49/results-ikj.json), [test log](benchmark-results/curated/20260922T175820.676435Z-4e6663560d49/tests.log).
-
-Both record dirty commit `4e6663560d499780f8bbe6f8f8c2ba9a544e0307`; the complete
-saved source snapshots identify the measured tree. Their source manifests,
-compiler commands, build metadata, and executable hashes match. The measured
-binary SHA-256 is `607fd347e882636368474a9803d4c9ae544495cef20bcb23d5bf41aea76749cc`,
-which also matches the disassembly manifest. Raw and combined result hashes,
-snapshot hashes, repetition counts, throughput formulas, and CPU aggregates
-were verified. Curated directories preserve local captures byte-for-byte.
-
-The machine remains Apple M3 Pro / Mac15,6 / arm64 / 18 GiB RAM / 11 logical CPUs,
-on macOS 26.6.2 (25G83), with Apple Clang 21.0.0 (`clang-2100.0.123.102`) and
-Google Benchmark v1.9.4. Engine flags remain
-`-O3 -DNDEBUG -std=gnu++20 -arch arm64`. No fast-math or explicit SIMD was added.
-All power boundaries recorded battery power with Low Power Mode disabled and
-no recorded thermal/performance warning. These probes are not continuous
-frequency or temperature measurements. The benchmark still warns that CPU
-frequency cannot be determined and thread affinity cannot be set.
-
-The desktop was not isolated: snapshots include changing activity from Chrome,
-WindowServer, indexing, VS Code/C++ tooling, Spotify, and Codex. No apps were
-closed, cores pinned, or persistent power settings changed. E's timed totals
-were 671.67 CPU seconds and 673.68 wall seconds; F's were 678.67 and 681.50.
-The maximum per-repetition wall/CPU ratios were 1.061 and 1.244 respectively,
-without the very large gaps seen in earlier captures. These totals exclude
-warm-up, calibration, and other process overhead.
-
-CPU CV reaches 7.18% (F's ikj at (32,256,512)); the largest absolute change in
-an implementation's median between captures is 8.10% (ikj at (255,255,1)).
-Nevertheless, the winner repeats for every one of the 24 cases, and the observed
-per-repetition CPU ranges of the two implementations are disjoint within each
-capture for every case. This supports the direction of these effects under the
-recorded conditions; it is not a confidence interval or a universal noise threshold.
-
-![Median CPU speedups for both captures](benchmark-results/curated/step7-sweeps.png)
-
-Full CPU times, CVs, GFLOP/s, and speedups for **all** cases are in the
-[complete tables](benchmark-results/curated/step7-sweeps.md). The
-[CSV](benchmark-results/curated/step7-sweeps.csv) also contains minima/maxima,
-median wall time, maximum wall/CPU ratio, total storage, and reference B stride.
-The chart plots the two capture medians separately, with logarithmic speedup
-and categorical size spacing; it does not show confidence intervals.
-
-All speedups below are reference median CPU time / ikj median CPU time;
-values below 1 favor the reference. Footprint is `4*(M*K + K*N + M*N)` bytes,
-expressed in KiB (1 KiB = 1024 bytes).
-
-| S | Footprint KiB, either orientation | Row-vector speedup E | Row-vector speedup F | Column-vector speedup E | Column-vector speedup F |
-|---:|---:|---:|---:|---:|---:|
-| 64 | 16.500 | 3.511× | 3.564× | 0.147× | 0.147× |
-| 128 | 65.000 | 6.459× | 6.592× | 0.113× | 0.111× |
-| 255 | 255.996 | 8.615× | 8.784× | 0.140× | 0.159× |
-| 256 | 258.000 | 9.919× | 9.810× | 0.148× | 0.142× |
-| 257 | 260.012 | 9.080× | 9.471× | 0.139× | 0.140× |
-| 512 | 1028.000 | 11.689× | 11.749× | 0.188× | 0.184× |
-| 1024 | 4104.000 | 13.710× | 13.689× | 0.216× | 0.213× |
-
-The row-vector case increasingly favors ikj overall, from roughly 3.5× at S=64
-to 13.7× at S=1024; the trend is not strictly monotonic near 255/256/257.
-The column-vector case favors the reference at every size: ikj takes about
-4.6–9.0× as much CPU time. Equal arithmetic counts and total footprints do not
-imply equal access patterns or performance.
-
-| N, with M=32 and K=256 | Footprint KiB | Reference inner B stride, bytes | Speedup E | Speedup F |
-|---:|---:|---:|---:|---:|
-| 1 | 33.125 | 4 | 0.143× | 0.145× |
-| 4 | 36.500 | 16 | 1.361× | 1.392× |
-| 16 | 50.000 | 64 | 1.901× | 1.874× |
-| 17 | 51.125 | 68 | 3.605× | 3.614× |
-| 64 | 104.000 | 256 | 5.775× | 5.739× |
-| 255 | 318.875 | 1020 | 7.421× | 7.487× |
-| 256 | 320.000 | 1024 | 9.758× | 9.792× |
-| 257 | 321.125 | 1028 | 7.393× | 7.448× |
-| 512 | 608.000 | 2048 | 10.220× | 10.074× |
-| 1024 | 1184.000 | 4096 | 12.291× | 11.697× |
-
-Among the tested widths, N=1 favors the reference and N>=4 favors ikj. Widths
-2 and 3 were not measured, so this does not establish an exact crossover.
-The scalar ikj path already wins at N=4 and N=16; vectorization is not necessary
-for every observed gain. At N=17, ikj drops from 46.58→26.32 µs in E and
-47.16→26.43 µs in F, about 43.5–44.0% less time despite 6.25% more arithmetic.
-This is consistent with the observed compiler transition discussed below.
-
-Total footprints span about 16.5 KiB to 4.01 MiB in the vector family. These are
-allocation sizes, not measurements of residency in any cache. Contiguous B/C
-traversal uses adjacent floats and can help spatial locality and prefetching;
-reusing A across columns changes temporal reuse. Hardware prefetch behavior
-was not measured. For the vector families, a hypothetical one-read-per-input,
-one-write-per-output traffic model approaches 0.5 FLOP/byte as S grows. Actual
-traffic includes output initialization, repeated C updates, and cache-level
-reuse, so this model cannot be used as measured DRAM bandwidth or proof that
-the kernel is bandwidth-bound. No cache size is inferred from a timing jump.
-
-### Part 7: compiler and executable inspection
-
-The [inspection report](profiles/step7-inspection/README.md),
-[assembly](profiles/step7-inspection/matrix.s),
-[vectorization diagnostics](profiles/step7-inspection/vectorization.txt), and
-[actual executable disassembly](profiles/step7-inspection/binary-matmul.txt)
-are preserved with a [hash/command manifest](profiles/step7-inspection/manifest.json).
-This is compiler inspection, not a new sample-based profile or hardware-counter
-attribution. The separate assembly command uses the same engine optimization flags,
-and executable disassembly confirms the relevant paths in the measured binary.
-
-| Path | Observed generated behavior | Implication |
-|---|---|---|
-| Reference, N>1 | Scalar `fmadd`, A step 4 bytes, B step 4*N bytes, one accumulator | Strided B access and a dependent reduction; C stored after reduction |
-| Reference, N=1, K>=16 | Contiguous vector loads and `fmul.4s`, followed by ordered scalar additions | The reference already exploits contiguous inputs for the column-vector case |
-| ikj, N<=16 | Scalar B/C loads, `fmadd`, C store, repeated k-level setup/checks | N=1 gains no useful column parallelism and repeatedly updates C |
-| ikj, N>=17, valid nonoverlapping B/C | Four width-4 `fmla.4s` operations per 16-column vector iteration | A scalar is reused across independent columns; B and C traversed contiguously |
-| ikj scalar suffix | 1–16 columns, with a C bounds check and scalar read/modify/write | Tail and check overhead remains, including 16 scalar columns at multiples of 16 |
-
-Checked accessors are inlined; that does not mean every bounds check vanishes.
-Reference bounds checks are outside its repeated scalar arithmetic loop, whereas
-ikj retains a bounds check in its scalar column loop and setup checks for each k.
-The ikj vector path also has a runtime B/C overlap test, even though this API
-allocates a fresh result. The observed gains therefore combine locality, A reuse,
-column parallelism, and changes in instruction/check overhead. They cannot be
-attributed exclusively to cache behavior.
-
-The N=1 paths also differ numerically: vector multiplication followed by ordered
-additions can round differently from scalar FMA. Increasing k order is preserved,
-but bitwise equality is not assumed. The independent oracle checks and documented
-error bounds cover these fixtures without fast-math or tolerance changes.
-
-One useful limit of the explanation is N=255/256/257. The compiler processes
-240/240/256 vector columns respectively and leaves 15/16/1 scalar columns.
-Nevertheless, in the fixed-width sweep N=256 is fastest: about 153 µs in both
-captures, compared with 190–191 µs at N=255 and about 197 µs at N=257. Fewer
-scalar tail elements alone do not predict the winner. Row strides are
-1020/1024/1028 bytes, so relative row starts rotate through offsets modulo 16
-for 255/257 while 256 preserves them. Alignment and reuse are plausible follow-up
-hypotheses; allocation-address telemetry and controlled layout experiments were
-not collected, so the cause of this local pattern remains unresolved. It is not
-presented as a cache-capacity boundary or as proof of an alignment penalty.
-
-### Part 8: decision, completion, and starting point for Step 8
-
-Retain `matmul_reference` unchanged as the correctness baseline and the faster
-measured N=1 path. Retain `matmul_ikj` as the unblocked performance baseline for
-the measured wider outputs. Keep both benchmark registrations and all wins and
-regressions. Do not introduce automatic dispatch based on this limited shape set;
-the compiler threshold is specific to this build, and a real inference workload
-has not yet established the dispatch requirements.
-
-Step 7's completion criteria are satisfied: correct loop-order variants were
-measured across shapes and sizes, both matrix-vector orientations were tested,
-working-set/access differences were documented, and compiler evidence explains
-major effects while exposing the limits of finer-grained timing explanations.
-Debug and sanitizer builds passed all three CTest targets. Release passed all
-four targets, including ten collector tests, before both captures. The independent
-oracle now covers all 29 registered shapes plus five longer/awkward cases, with
-four patterns each: 136 cases per kernel, in addition to the original 1,536 small
-random cases per kernel and hand-computed/contract tests.
-
-For **Roadmap Step 8**, start with a separate tiled ikj kernel and compare it
-against both existing functions. The initial hypothesis is that reusing a B tile
-across a group of output rows and keeping a C tile active will improve sufficiently
-large multirow GEMMs. This does not predict a benefit for M=1 or N=1.
-
-1. Keep the checked FP32 row-major interface, allocation-inclusive timing, and
-   compiler flags. Change tiling only; defer packing, explicit SIMD, and threading.
-2. Start with `i_tile → j_tile → k_tile → i → k → j`, maintaining increasing k
-   contributions for each output and clamping every tile end to matrix dimensions.
-3. Preselect a small exploratory set of (BM,BK,BN): (8,32,64), (16,32,64),
-   (16,64,64). Their nominal A/B/C tile storage is 11/14/24 KiB under
-   `4*(BM*BK + BK*BN + BM*BN)`. These are experiment choices, not optimal sizes
-   inferred from a cache specification. Account for other live data and changed
-   A/C traffic and compiler tails when interpreting them.
-4. Extend oracle tests to tile-boundary neighbors and nonmultiples; benchmark
-   the existing 128/256-square and wide multirow cases plus a larger square
-   (for example 512), retaining both vector orientations as regression controls.
-5. Keep a tile choice only if its repeated measurements justify it against the
-   relevant unblocked kernel. If blocking fails to help, record that outcome
-   before considering packing or a different loop schedule.
-
-The tiled kernel itself is not implemented here: it is the next roadmap milestone,
-not part of finishing Step 7.
-
-### Reproduction
-
-Use `--suite memory-access` with the two opposite-order commands in
-[BENCHMARKING.md](BENCHMARKING.md). The summarizer reads each capture's saved
-shape manifest, so both historical seven-shape and current 24-shape captures
-remain independently reproducible. After generating the sweep CSV, the optional
-chart requires matplotlib:
-
-```sh
-python3 scripts/summarize_benchmarks.py \
-  benchmark-results/curated/20260922T174459.417805Z-4e6663560d49 \
-  benchmark-results/curated/20260922T175820.676435Z-4e6663560d49 \
-  --csv /tmp/step7-sweeps.csv
-MPLCONFIGDIR=/tmp/cpu-inference-matplotlib XDG_CACHE_HOME=/tmp/cpu-inference-cache \
-  python3 scripts/plot_memory_access.py /tmp/step7-sweeps.csv /tmp/step7-sweeps
-```

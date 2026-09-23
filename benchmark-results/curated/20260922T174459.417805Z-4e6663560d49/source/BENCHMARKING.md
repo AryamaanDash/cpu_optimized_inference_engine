@@ -1,8 +1,5 @@
 # Saving a reproducible benchmark run
 
-Step 7 is complete; see [the final analysis and next milestone](MEMORY_ACCESS.md).
-The Step 5 baseline below is preserved as historical evidence.
-
 **Roadmap Step 5 is complete.** The follow-up pair C–D below establishes an
 allocation-inclusive, single-thread FP32 baseline on this Mac: median CPU times
 agree within 1.39% across all seven shapes, with within-run CV at most 1.14%.
