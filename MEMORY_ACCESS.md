@@ -499,6 +499,10 @@ large multirow GEMMs. This does not predict a benefit for M=1 or N=1.
 The tiled kernel itself is not implemented here: it is the next roadmap milestone,
 not part of finishing Step 7.
 
+The Step 8 experiment definition is now recorded in
+[CACHE_BLOCKING.md](CACHE_BLOCKING.md). It fixes the baselines, controls, candidate
+tiles, workloads, and decision criteria before implementing the tiled kernel.
+
 ### Reproduction
 
 Use `--suite memory-access` with the two opposite-order commands in
