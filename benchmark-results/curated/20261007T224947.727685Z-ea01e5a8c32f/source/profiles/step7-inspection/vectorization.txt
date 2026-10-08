@@ -1,0 +1,26 @@
+src/matrix.cpp:82:21: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+   82 |                     for(std::size_t k = 0; k < b.rows(); ++k){
+      |                     ^
+src/matrix.cpp:85:38: remark: loop not vectorized: call instruction cannot be vectorized [-Rpass-analysis=loop-vectorize]
+   85 |                     result(row, col) = total;
+      |                                      ^
+src/matrix.cpp:79:13: remark: loop not vectorized: instruction cannot be vectorized [-Rpass-analysis=loop-vectorize]
+   79 |             for(std::size_t row = 0; row < result.rows(); ++row){
+      |             ^
+src/matrix.cpp:79:13: remark: loop not vectorized [-Rpass-missed=loop-vectorize]
+src/matrix.cpp:102:17: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+  102 |                 for(std::size_t col = 0; col < b.cols(); ++ col){
+      |                 ^
+In file included from src/matrix.cpp:1:
+In file included from include/inference/matrix.hpp:4:
+In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/vector:314:
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__vector/vector.h:935:3: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+  935 |   for (pointer __pos = __tx.__pos_; __pos != __new_end; __tx.__pos_ = ++__pos) {
+      |   ^
+In file included from src/matrix.cpp:1:
+In file included from include/inference/matrix.hpp:4:
+In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/vector:314:
+In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__vector/vector.h:49:
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__split_buffer:257:3: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+  257 |   for (; __tx.__pos_ != __tx.__end_; ++__tx.__pos_) {
+      |   ^

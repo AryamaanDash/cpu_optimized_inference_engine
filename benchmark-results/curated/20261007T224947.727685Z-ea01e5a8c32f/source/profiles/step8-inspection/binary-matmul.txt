@@ -1,0 +1,810 @@
+
+build/benchmark-release/matmul_bench:	file format mach-o arm64
+
+Disassembly of section __TEXT,__text:
+
+00000001000038a0 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_>:
+1000038a0: a9bc5ff8    	stp	x24, x23, [sp, #-0x40]!
+1000038a4: a90157f6    	stp	x22, x21, [sp, #0x10]
+1000038a8: a9024ff4    	stp	x20, x19, [sp, #0x20]
+1000038ac: a9037bfd    	stp	x29, x30, [sp, #0x30]
+1000038b0: 9100c3fd    	add	x29, sp, #0x30
+1000038b4: aa0803f3    	mov	x19, x8
+1000038b8: f9400408    	ldr	x8, [x0, #0x8]
+1000038bc: f9400029    	ldr	x9, [x1]
+1000038c0: eb09011f    	cmp	x8, x9
+1000038c4: 54001c81    	b.ne	0x100003c54 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x3b4>
+1000038c8: aa0103f4    	mov	x20, x1
+1000038cc: aa0003f5    	mov	x21, x0
+1000038d0: f9400001    	ldr	x1, [x0]
+1000038d4: f9400682    	ldr	x2, [x20, #0x8]
+1000038d8: aa1303e0    	mov	x0, x19
+1000038dc: 97ffff09    	bl	0x100003500 <__ZN9inference6MatrixC2Emm>
+1000038e0: f9400276    	ldr	x22, [x19]
+1000038e4: b40007f6    	cbz	x22, 0x1000039e0 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x140>
+1000038e8: f9400668    	ldr	x8, [x19, #0x8]
+1000038ec: b40007a8    	cbz	x8, 0x1000039e0 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x140>
+1000038f0: f9400289    	ldr	x9, [x20]
+1000038f4: b4000649    	cbz	x9, 0x1000039bc <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x11c>
+1000038f8: d100052a    	sub	x10, x9, #0x1
+1000038fc: f100113f    	cmp	x9, #0x4
+100003900: 540007a2    	b.hs	0x1000039f4 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x154>
+100003904: d280000b    	mov	x11, #0x0               ; =0
+100003908: d280000c    	mov	x12, #0x0               ; =0
+10000390c: d37ef50d    	lsl	x13, x8, #2
+100003910: 6f00e400    	movi.2d	v0, #0000000000000000
+100003914: 14000005    	b	0x100003928 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x88>
+100003918: 9100058c    	add	x12, x12, #0x1
+10000391c: 8b0d016b    	add	x11, x11, x13
+100003920: eb16019f    	cmp	x12, x22
+100003924: 540005e0    	b.eq	0x1000039e0 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x140>
+100003928: f94002ae    	ldr	x14, [x21]
+10000392c: eb0e019f    	cmp	x12, x14
+100003930: 54001622    	b.hs	0x100003bf4 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x354>
+100003934: d280000e    	mov	x14, #0x0               ; =0
+100003938: f9400a6f    	ldr	x15, [x19, #0x10]
+10000393c: 8b0b01ef    	add	x15, x15, x11
+100003940: 14000005    	b	0x100003954 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0xb4>
+100003944: bc2e79e1    	str	s1, [x15, x14, lsl #2]
+100003948: 910005ce    	add	x14, x14, #0x1
+10000394c: eb0e011f    	cmp	x8, x14
+100003950: 54fffe40    	b.eq	0x100003918 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x78>
+100003954: f94006a3    	ldr	x3, [x21, #0x8]
+100003958: f9400690    	ldr	x16, [x20, #0x8]
+10000395c: eb1001df    	cmp	x14, x16
+100003960: 54001482    	b.hs	0x100003bf0 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x350>
+100003964: eb0a007f    	cmp	x3, x10
+100003968: 54001469    	b.ls	0x100003bf4 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x354>
+10000396c: f9400ab1    	ldr	x17, [x21, #0x10]
+100003970: 9b0c7c60    	mul	x0, x3, x12
+100003974: 8b000a31    	add	x17, x17, x0, lsl #2
+100003978: f9400a80    	ldr	x0, [x20, #0x10]
+10000397c: bd400221    	ldr	s1, [x17]
+100003980: bc6e7802    	ldr	s2, [x0, x14, lsl #2]
+100003984: 1f020021    	fmadd	s1, s1, s2, s0
+100003988: f100053f    	cmp	x9, #0x1
+10000398c: 54fffdc0    	b.eq	0x100003944 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0xa4>
+100003990: bd400622    	ldr	s2, [x17, #0x4]
+100003994: 8b100801    	add	x1, x0, x16, lsl #2
+100003998: bc6e7823    	ldr	s3, [x1, x14, lsl #2]
+10000399c: 1f030441    	fmadd	s1, s2, s3, s1
+1000039a0: f100093f    	cmp	x9, #0x2
+1000039a4: 54fffd00    	b.eq	0x100003944 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0xa4>
+1000039a8: bd400a22    	ldr	s2, [x17, #0x8]
+1000039ac: 8b100c10    	add	x16, x0, x16, lsl #3
+1000039b0: bc6e7a03    	ldr	s3, [x16, x14, lsl #2]
+1000039b4: 1f030441    	fmadd	s1, s2, s3, s1
+1000039b8: 17ffffe3    	b	0x100003944 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0xa4>
+1000039bc: d2800015    	mov	x21, #0x0               ; =0
+1000039c0: d37ef514    	lsl	x20, x8, #2
+1000039c4: f9400a68    	ldr	x8, [x19, #0x10]
+1000039c8: 8b150100    	add	x0, x8, x21
+1000039cc: aa1403e1    	mov	x1, x20
+1000039d0: 9400aa79    	bl	0x10002e3b4 <_vsnprintf+0x10002e3b4>
+1000039d4: 8b1402b5    	add	x21, x21, x20
+1000039d8: f10006d6    	subs	x22, x22, #0x1
+1000039dc: 54ffff41    	b.ne	0x1000039c4 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x124>
+1000039e0: a9437bfd    	ldp	x29, x30, [sp, #0x30]
+1000039e4: a9424ff4    	ldp	x20, x19, [sp, #0x20]
+1000039e8: a94157f6    	ldp	x22, x21, [sp, #0x10]
+1000039ec: a8c45ff8    	ldp	x24, x23, [sp], #0x40
+1000039f0: d65f03c0    	ret
+1000039f4: d280000b    	mov	x11, #0x0               ; =0
+1000039f8: d280000c    	mov	x12, #0x0               ; =0
+1000039fc: 927ced2d    	and	x13, x9, #0xfffffffffffffff0
+100003a00: 927e052e    	and	x14, x9, #0xc
+100003a04: 927ef52f    	and	x15, x9, #0xfffffffffffffffc
+100003a08: cb0f03f0    	neg	x16, x15
+100003a0c: 14000005    	b	0x100003a20 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x180>
+100003a10: 9100058c    	add	x12, x12, #0x1
+100003a14: 9100116b    	add	x11, x11, #0x4
+100003a18: eb16019f    	cmp	x12, x22
+100003a1c: 54fffe20    	b.eq	0x1000039e0 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x140>
+100003a20: f94002b1    	ldr	x17, [x21]
+100003a24: eb11019f    	cmp	x12, x17
+100003a28: 54000e62    	b.hs	0x100003bf4 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x354>
+100003a2c: d2800011    	mov	x17, #0x0               ; =0
+100003a30: d2800000    	mov	x0, #0x0                ; =0
+100003a34: 9b0c7d01    	mul	x1, x8, x12
+100003a38: f9400a62    	ldr	x2, [x19, #0x10]
+100003a3c: 8b010841    	add	x1, x2, x1, lsl #2
+100003a40: 52800402    	mov	w2, #0x20               ; =32
+100003a44: 14000007    	b	0x100003a60 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x1c0>
+100003a48: bc207820    	str	s0, [x1, x0, lsl #2]
+100003a4c: 91000400    	add	x0, x0, #0x1
+100003a50: 91001042    	add	x2, x2, #0x4
+100003a54: 91001231    	add	x17, x17, #0x4
+100003a58: eb08001f    	cmp	x0, x8
+100003a5c: 54fffda0    	b.eq	0x100003a10 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x170>
+100003a60: f94006a3    	ldr	x3, [x21, #0x8]
+100003a64: f9400684    	ldr	x4, [x20, #0x8]
+100003a68: eb04001f    	cmp	x0, x4
+100003a6c: 54000c22    	b.hs	0x100003bf0 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x350>
+100003a70: eb0a007f    	cmp	x3, x10
+100003a74: 54000c09    	b.ls	0x100003bf4 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x354>
+100003a78: f9400aa5    	ldr	x5, [x21, #0x10]
+100003a7c: f9400a86    	ldr	x6, [x20, #0x10]
+100003a80: f100049f    	cmp	x4, #0x1
+100003a84: 540000c1    	b.ne	0x100003a9c <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x1fc>
+100003a88: f100413f    	cmp	x9, #0x10
+100003a8c: 540000e2    	b.hs	0x100003aa8 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x208>
+100003a90: d2800018    	mov	x24, #0x0               ; =0
+100003a94: 6f00e400    	movi.2d	v0, #0000000000000000
+100003a98: 14000034    	b	0x100003b68 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x2c8>
+100003a9c: d2800017    	mov	x23, #0x0               ; =0
+100003aa0: 6f00e400    	movi.2d	v0, #0000000000000000
+100003aa4: 14000046    	b	0x100003bbc <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x31c>
+100003aa8: 9b031567    	madd	x7, x11, x3, x5
+100003aac: 910080e7    	add	x7, x7, #0x20
+100003ab0: 8b0200d7    	add	x23, x6, x2
+100003ab4: 6f00e400    	movi.2d	v0, #0000000000000000
+100003ab8: aa0d03f8    	mov	x24, x13
+100003abc: ad7f08e1    	ldp	q1, q2, [x7, #-0x20]
+100003ac0: acc210e3    	ldp	q3, q4, [x7], #0x40
+100003ac4: ad7f1ae5    	ldp	q5, q6, [x23, #-0x20]
+100003ac8: acc242e7    	ldp	q7, q16, [x23], #0x40
+100003acc: 6e25dc21    	fmul.4s	v1, v1, v5
+100003ad0: 5e1c0425    	mov	s5, v1[3]
+100003ad4: 5e140431    	mov	s17, v1[2]
+100003ad8: 5e0c0432    	mov	s18, v1[1]
+100003adc: 6e26dc42    	fmul.4s	v2, v2, v6
+100003ae0: 5e1c0446    	mov	s6, v2[3]
+100003ae4: 5e140453    	mov	s19, v2[2]
+100003ae8: 5e0c0454    	mov	s20, v2[1]
+100003aec: 6e27dc63    	fmul.4s	v3, v3, v7
+100003af0: 5e1c0467    	mov	s7, v3[3]
+100003af4: 5e140475    	mov	s21, v3[2]
+100003af8: 5e0c0476    	mov	s22, v3[1]
+100003afc: 6e30dc84    	fmul.4s	v4, v4, v16
+100003b00: 5e1c0490    	mov	s16, v4[3]
+100003b04: 5e140497    	mov	s23, v4[2]
+100003b08: 5e0c0498    	mov	s24, v4[1]
+100003b0c: 1e212800    	fadd	s0, s0, s1
+100003b10: 1e322800    	fadd	s0, s0, s18
+100003b14: 1e312800    	fadd	s0, s0, s17
+100003b18: 1e252800    	fadd	s0, s0, s5
+100003b1c: 1e222800    	fadd	s0, s0, s2
+100003b20: 1e342800    	fadd	s0, s0, s20
+100003b24: 1e332800    	fadd	s0, s0, s19
+100003b28: 1e262800    	fadd	s0, s0, s6
+100003b2c: 1e232800    	fadd	s0, s0, s3
+100003b30: 1e362800    	fadd	s0, s0, s22
+100003b34: 1e352800    	fadd	s0, s0, s21
+100003b38: 1e272800    	fadd	s0, s0, s7
+100003b3c: 1e242800    	fadd	s0, s0, s4
+100003b40: 1e382800    	fadd	s0, s0, s24
+100003b44: 1e372800    	fadd	s0, s0, s23
+100003b48: 1e302800    	fadd	s0, s0, s16
+100003b4c: f1004318    	subs	x24, x24, #0x10
+100003b50: 54fffb61    	b.ne	0x100003abc <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x21c>
+100003b54: eb0d013f    	cmp	x9, x13
+100003b58: 54fff780    	b.eq	0x100003a48 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x1a8>
+100003b5c: aa0d03f8    	mov	x24, x13
+100003b60: aa0d03f7    	mov	x23, x13
+100003b64: b40002ce    	cbz	x14, 0x100003bbc <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x31c>
+100003b68: 8b180207    	add	x7, x16, x24
+100003b6c: d37ef718    	lsl	x24, x24, #2
+100003b70: 8b180237    	add	x23, x17, x24
+100003b74: 8b1700d7    	add	x23, x6, x23
+100003b78: 9b036178    	madd	x24, x11, x3, x24
+100003b7c: 8b1800b8    	add	x24, x5, x24
+100003b80: 3cc10701    	ldr	q1, [x24], #0x10
+100003b84: 3cc106e2    	ldr	q2, [x23], #0x10
+100003b88: 6e22dc21    	fmul.4s	v1, v1, v2
+100003b8c: 5e1c0422    	mov	s2, v1[3]
+100003b90: 5e140423    	mov	s3, v1[2]
+100003b94: 5e0c0424    	mov	s4, v1[1]
+100003b98: 1e212800    	fadd	s0, s0, s1
+100003b9c: 1e242800    	fadd	s0, s0, s4
+100003ba0: 1e232800    	fadd	s0, s0, s3
+100003ba4: 1e222800    	fadd	s0, s0, s2
+100003ba8: b10010e7    	adds	x7, x7, #0x4
+100003bac: 54fffea1    	b.ne	0x100003b80 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x2e0>
+100003bb0: aa0f03f7    	mov	x23, x15
+100003bb4: eb0f013f    	cmp	x9, x15
+100003bb8: 54fff480    	b.eq	0x100003a48 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x1a8>
+100003bbc: cb170127    	sub	x7, x9, x23
+100003bc0: d37ef6f7    	lsl	x23, x23, #2
+100003bc4: 9b041ae6    	madd	x6, x23, x4, x6
+100003bc8: d37ef484    	lsl	x4, x4, #2
+100003bcc: 9b035d63    	madd	x3, x11, x3, x23
+100003bd0: 8b0300a3    	add	x3, x5, x3
+100003bd4: bc404461    	ldr	s1, [x3], #0x4
+100003bd8: bc7168c2    	ldr	s2, [x6, x17]
+100003bdc: 1f020020    	fmadd	s0, s1, s2, s0
+100003be0: 8b0400c6    	add	x6, x6, x4
+100003be4: f10004e7    	subs	x7, x7, #0x1
+100003be8: 54ffff61    	b.ne	0x100003bd4 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x334>
+100003bec: 17ffff97    	b	0x100003a48 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x1a8>
+100003bf0: b5000103    	cbnz	x3, 0x100003c10 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x370>
+100003bf4: 52800200    	mov	w0, #0x10               ; =16
+100003bf8: 9400a9c2    	bl	0x10002e300 <_vsnprintf+0x10002e300>
+100003bfc: aa0003f5    	mov	x21, x0
+100003c00: d0000161    	adrp	x1, 0x100031000 <__ZNSt3__119piecewise_constructE+0x110>
+100003c04: 9120a021    	add	x1, x1, #0x828
+100003c08: 9400a8f8    	bl	0x10002dfe8 <_vsnprintf+0x10002dfe8>
+100003c0c: 14000007    	b	0x100003c28 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x388>
+100003c10: 52800200    	mov	w0, #0x10               ; =16
+100003c14: 9400a9bb    	bl	0x10002e300 <_vsnprintf+0x10002e300>
+100003c18: aa0003f5    	mov	x21, x0
+100003c1c: d0000161    	adrp	x1, 0x100031000 <__ZNSt3__119piecewise_constructE+0x110>
+100003c20: 9120a021    	add	x1, x1, #0x828
+100003c24: 9400a8f1    	bl	0x10002dfe8 <_vsnprintf+0x10002dfe8>
+100003c28: b0000188    	adrp	x8, 0x100034000 <_vsnprintf+0x100034000>
+100003c2c: f9417908    	ldr	x8, [x8, #0x2f0]
+100003c30: 91004108    	add	x8, x8, #0x10
+100003c34: f90002a8    	str	x8, [x21]
+100003c38: b0000181    	adrp	x1, 0x100034000 <_vsnprintf+0x100034000>
+100003c3c: f9427421    	ldr	x1, [x1, #0x4e8]
+100003c40: b0000182    	adrp	x2, 0x100034000 <_vsnprintf+0x100034000>
+100003c44: f9401842    	ldr	x2, [x2, #0x30]
+100003c48: aa1503e0    	mov	x0, x21
+100003c4c: 9400a9c8    	bl	0x10002e36c <_vsnprintf+0x10002e36c>
+100003c50: d4200020    	brk	#0x1
+100003c54: 52800200    	mov	w0, #0x10               ; =16
+100003c58: 9400a9aa    	bl	0x10002e300 <_vsnprintf+0x10002e300>
+100003c5c: aa0003f3    	mov	x19, x0
+100003c60: d0000161    	adrp	x1, 0x100031000 <__ZNSt3__119piecewise_constructE+0x110>
+100003c64: 91211021    	add	x1, x1, #0x844
+100003c68: 94000016    	bl	0x100003cc0 <__ZNSt16invalid_argumentC1B9nqe210106EPKc>
+100003c6c: aa1303e0    	mov	x0, x19
+100003c70: 9400a7c1    	bl	0x10002db74 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_.cold.1>
+100003c74: aa0003f4    	mov	x20, x0
+100003c78: aa1303e0    	mov	x0, x19
+100003c7c: 9400a9ad    	bl	0x10002e330 <_vsnprintf+0x10002e330>
+100003c80: aa1403e0    	mov	x0, x20
+100003c84: 9400a8ca    	bl	0x10002dfac <_vsnprintf+0x10002dfac>
+100003c88: 14000001    	b	0x100003c8c <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x3ec>
+100003c8c: aa0003f4    	mov	x20, x0
+100003c90: aa1503e0    	mov	x0, x21
+100003c94: 9400a9a7    	bl	0x10002e330 <_vsnprintf+0x10002e330>
+100003c98: 14000002    	b	0x100003ca0 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x400>
+100003c9c: aa0003f4    	mov	x20, x0
+100003ca0: f9400a60    	ldr	x0, [x19, #0x10]
+100003ca4: b5000060    	cbnz	x0, 0x100003cb0 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_+0x410>
+100003ca8: aa1403e0    	mov	x0, x20
+100003cac: 9400a8c0    	bl	0x10002dfac <_vsnprintf+0x10002dfac>
+100003cb0: f9000e60    	str	x0, [x19, #0x18]
+100003cb4: 9400a98a    	bl	0x10002e2dc <_vsnprintf+0x10002e2dc>
+100003cb8: aa1403e0    	mov	x0, x20
+100003cbc: 9400a8bc    	bl	0x10002dfac <_vsnprintf+0x10002dfac>
+
+0000000100003ce4 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_>:
+100003ce4: a9bb67fa    	stp	x26, x25, [sp, #-0x50]!
+100003ce8: a9015ff8    	stp	x24, x23, [sp, #0x10]
+100003cec: a90257f6    	stp	x22, x21, [sp, #0x20]
+100003cf0: a9034ff4    	stp	x20, x19, [sp, #0x30]
+100003cf4: a9047bfd    	stp	x29, x30, [sp, #0x40]
+100003cf8: 910103fd    	add	x29, sp, #0x40
+100003cfc: aa0803f3    	mov	x19, x8
+100003d00: f9400408    	ldr	x8, [x0, #0x8]
+100003d04: f9400029    	ldr	x9, [x1]
+100003d08: eb09011f    	cmp	x8, x9
+100003d0c: 54001121    	b.ne	0x100003f30 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x24c>
+100003d10: aa0103f4    	mov	x20, x1
+100003d14: aa0003f5    	mov	x21, x0
+100003d18: f9400001    	ldr	x1, [x0]
+100003d1c: f9400682    	ldr	x2, [x20, #0x8]
+100003d20: aa1303e0    	mov	x0, x19
+100003d24: 97fffdf7    	bl	0x100003500 <__ZN9inference6MatrixC2Emm>
+100003d28: f94002a8    	ldr	x8, [x21]
+100003d2c: b4000c68    	cbz	x8, 0x100003eb8 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x1d4>
+100003d30: f94006a9    	ldr	x9, [x21, #0x8]
+100003d34: b4000be9    	cbz	x9, 0x100003eb0 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x1cc>
+100003d38: d280000a    	mov	x10, #0x0               ; =0
+100003d3c: d280000b    	mov	x11, #0x0               ; =0
+100003d40: 5280020c    	mov	w12, #0x10              ; =16
+100003d44: 14000005    	b	0x100003d58 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x74>
+100003d48: 9100056b    	add	x11, x11, #0x1
+100003d4c: 9100114a    	add	x10, x10, #0x4
+100003d50: eb08017f    	cmp	x11, x8
+100003d54: 54000b20    	b.eq	0x100003eb8 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x1d4>
+100003d58: f940068d    	ldr	x13, [x20, #0x8]
+100003d5c: b4000a2d    	cbz	x13, 0x100003ea0 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x1bc>
+100003d60: d280000e    	mov	x14, #0x0               ; =0
+100003d64: d280000f    	mov	x15, #0x0               ; =0
+100003d68: d37ef570    	lsl	x16, x11, #2
+100003d6c: 9b0b7d31    	mul	x17, x9, x11
+100003d70: f9400aa0    	ldr	x0, [x21, #0x10]
+100003d74: 8b110811    	add	x17, x0, x17, lsl #2
+100003d78: f9400280    	ldr	x0, [x20]
+100003d7c: d10005a1    	sub	x1, x13, #0x1
+100003d80: d37ef5a2    	lsl	x2, x13, #2
+100003d84: 52800403    	mov	w3, #0x20               ; =32
+100003d88: eb0001ff    	cmp	x15, x0
+100003d8c: 54000c42    	b.hs	0x100003f14 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x230>
+100003d90: f9400264    	ldr	x4, [x19]
+100003d94: eb04017f    	cmp	x11, x4
+100003d98: 540009c2    	b.hs	0x100003ed0 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x1ec>
+100003d9c: bc6f7a20    	ldr	s0, [x17, x15, lsl #2]
+100003da0: f9400a86    	ldr	x6, [x20, #0x10]
+100003da4: a9409664    	ldp	x4, x5, [x19, #0x8]
+100003da8: eb04003f    	cmp	x1, x4
+100003dac: 9a843027    	csel	x7, x1, x4, lo
+100003db0: f1003cff    	cmp	x7, #0xf
+100003db4: 540004a9    	b.ls	0x100003e48 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x164>
+100003db8: 9b0f7c56    	mul	x22, x2, x15
+100003dbc: 9b0f7db7    	mul	x23, x13, x15
+100003dc0: 8b1708d7    	add	x23, x6, x23, lsl #2
+100003dc4: 9b0b7c98    	mul	x24, x4, x11
+100003dc8: 8b1808b8    	add	x24, x5, x24, lsl #2
+100003dcc: 9b041619    	madd	x25, x16, x4, x5
+100003dd0: d37ef4fa    	lsl	x26, x7, #2
+100003dd4: 8b1a0339    	add	x25, x25, x26
+100003dd8: 91001339    	add	x25, x25, #0x4
+100003ddc: 8b1600d6    	add	x22, x6, x22
+100003de0: 8b1a02d6    	add	x22, x22, x26
+100003de4: 910012d6    	add	x22, x22, #0x4
+100003de8: eb16031f    	cmp	x24, x22
+100003dec: fa5932e2    	ccmp	x23, x25, #0x2, lo
+100003df0: 540002c3    	b.lo	0x100003e48 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x164>
+100003df4: 910004e7    	add	x7, x7, #0x1
+100003df8: f2400cf6    	ands	x22, x7, #0xf
+100003dfc: 9a960196    	csel	x22, x12, x22, eq
+100003e00: cb1600e7    	sub	x7, x7, x22
+100003e04: 8b0300d6    	add	x22, x6, x3
+100003e08: 9b041557    	madd	x23, x10, x4, x5
+100003e0c: 910082f7    	add	x23, x23, #0x20
+100003e10: aa0703f8    	mov	x24, x7
+100003e14: ad7f0ac1    	ldp	q1, q2, [x22, #-0x20]
+100003e18: acc212c3    	ldp	q3, q4, [x22], #0x40
+100003e1c: ad7f1ae5    	ldp	q5, q6, [x23, #-0x20]
+100003e20: ad4042e7    	ldp	q7, q16, [x23]
+100003e24: 4f801025    	fmla.4s	v5, v1, v0[0]
+100003e28: 4f801046    	fmla.4s	v6, v2, v0[0]
+100003e2c: 4f801067    	fmla.4s	v7, v3, v0[0]
+100003e30: 4f801090    	fmla.4s	v16, v4, v0[0]
+100003e34: ad3f1ae5    	stp	q5, q6, [x23, #-0x20]
+100003e38: ac8242e7    	stp	q7, q16, [x23], #0x40
+100003e3c: f1004318    	subs	x24, x24, #0x10
+100003e40: 54fffea1    	b.ne	0x100003e14 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x130>
+100003e44: 14000002    	b	0x100003e4c <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x168>
+100003e48: d2800007    	mov	x7, #0x0                ; =0
+100003e4c: cb070096    	sub	x22, x4, x7
+100003e50: cb0701b7    	sub	x23, x13, x7
+100003e54: d37ef4e7    	lsl	x7, x7, #2
+100003e58: 8b0701d8    	add	x24, x14, x7
+100003e5c: 8b1800c6    	add	x6, x6, x24
+100003e60: 9b041d44    	madd	x4, x10, x4, x7
+100003e64: 8b0400a4    	add	x4, x5, x4
+100003e68: b4000356    	cbz	x22, 0x100003ed0 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x1ec>
+100003e6c: bc4044c1    	ldr	s1, [x6], #0x4
+100003e70: bd400082    	ldr	s2, [x4]
+100003e74: 1f010801    	fmadd	s1, s0, s1, s2
+100003e78: bc004481    	str	s1, [x4], #0x4
+100003e7c: d10006d6    	sub	x22, x22, #0x1
+100003e80: f10006f7    	subs	x23, x23, #0x1
+100003e84: 54ffff21    	b.ne	0x100003e68 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x184>
+100003e88: 910005ef    	add	x15, x15, #0x1
+100003e8c: 8b020063    	add	x3, x3, x2
+100003e90: 8b0201ce    	add	x14, x14, x2
+100003e94: eb0901ff    	cmp	x15, x9
+100003e98: 54fff781    	b.ne	0x100003d88 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0xa4>
+100003e9c: 17ffffab    	b	0x100003d48 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x64>
+100003ea0: aa0903ed    	mov	x13, x9
+100003ea4: f10005ad    	subs	x13, x13, #0x1
+100003ea8: 54ffffe1    	b.ne	0x100003ea4 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x1c0>
+100003eac: 17ffffa7    	b	0x100003d48 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x64>
+100003eb0: f1000508    	subs	x8, x8, #0x1
+100003eb4: 54ffffe1    	b.ne	0x100003eb0 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x1cc>
+100003eb8: a9447bfd    	ldp	x29, x30, [sp, #0x40]
+100003ebc: a9434ff4    	ldp	x20, x19, [sp, #0x30]
+100003ec0: a94257f6    	ldp	x22, x21, [sp, #0x20]
+100003ec4: a9415ff8    	ldp	x24, x23, [sp, #0x10]
+100003ec8: a8c567fa    	ldp	x26, x25, [sp], #0x50
+100003ecc: d65f03c0    	ret
+100003ed0: 52800200    	mov	w0, #0x10               ; =16
+100003ed4: 9400a90b    	bl	0x10002e300 <_vsnprintf+0x10002e300>
+100003ed8: aa0003f5    	mov	x21, x0
+100003edc: d0000161    	adrp	x1, 0x100031000 <__ZNSt3__119piecewise_constructE+0x110>
+100003ee0: 9120a021    	add	x1, x1, #0x828
+100003ee4: 9400a841    	bl	0x10002dfe8 <_vsnprintf+0x10002dfe8>
+100003ee8: b0000188    	adrp	x8, 0x100034000 <_vsnprintf+0x100034000>
+100003eec: f9417908    	ldr	x8, [x8, #0x2f0]
+100003ef0: 91004108    	add	x8, x8, #0x10
+100003ef4: f90002a8    	str	x8, [x21]
+100003ef8: b0000181    	adrp	x1, 0x100034000 <_vsnprintf+0x100034000>
+100003efc: f9427421    	ldr	x1, [x1, #0x4e8]
+100003f00: b0000182    	adrp	x2, 0x100034000 <_vsnprintf+0x100034000>
+100003f04: f9401842    	ldr	x2, [x2, #0x30]
+100003f08: aa1503e0    	mov	x0, x21
+100003f0c: 9400a918    	bl	0x10002e36c <_vsnprintf+0x10002e36c>
+100003f10: d4200020    	brk	#0x1
+100003f14: 52800200    	mov	w0, #0x10               ; =16
+100003f18: 9400a8fa    	bl	0x10002e300 <_vsnprintf+0x10002e300>
+100003f1c: aa0003f5    	mov	x21, x0
+100003f20: d0000161    	adrp	x1, 0x100031000 <__ZNSt3__119piecewise_constructE+0x110>
+100003f24: 9120a021    	add	x1, x1, #0x828
+100003f28: 9400a830    	bl	0x10002dfe8 <_vsnprintf+0x10002dfe8>
+100003f2c: 17ffffef    	b	0x100003ee8 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x204>
+100003f30: 52800200    	mov	w0, #0x10               ; =16
+100003f34: 9400a8f3    	bl	0x10002e300 <_vsnprintf+0x10002e300>
+100003f38: aa0003f3    	mov	x19, x0
+100003f3c: d0000161    	adrp	x1, 0x100031000 <__ZNSt3__119piecewise_constructE+0x110>
+100003f40: 91211021    	add	x1, x1, #0x844
+100003f44: 97ffff5f    	bl	0x100003cc0 <__ZNSt16invalid_argumentC1B9nqe210106EPKc>
+100003f48: aa1303e0    	mov	x0, x19
+100003f4c: 9400a70a    	bl	0x10002db74 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_.cold.1>
+100003f50: aa0003f4    	mov	x20, x0
+100003f54: aa1303e0    	mov	x0, x19
+100003f58: 9400a8f6    	bl	0x10002e330 <_vsnprintf+0x10002e330>
+100003f5c: aa1403e0    	mov	x0, x20
+100003f60: 9400a813    	bl	0x10002dfac <_vsnprintf+0x10002dfac>
+100003f64: 14000001    	b	0x100003f68 <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x284>
+100003f68: aa0003f4    	mov	x20, x0
+100003f6c: aa1503e0    	mov	x0, x21
+100003f70: 9400a8f0    	bl	0x10002e330 <_vsnprintf+0x10002e330>
+100003f74: 14000002    	b	0x100003f7c <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x298>
+100003f78: aa0003f4    	mov	x20, x0
+100003f7c: f9400a60    	ldr	x0, [x19, #0x10]
+100003f80: b5000060    	cbnz	x0, 0x100003f8c <__ZN9inference10matmul_ikjERKNS_6MatrixES2_+0x2a8>
+100003f84: aa1403e0    	mov	x0, x20
+100003f88: 9400a809    	bl	0x10002dfac <_vsnprintf+0x10002dfac>
+100003f8c: f9000e60    	str	x0, [x19, #0x18]
+100003f90: 9400a8d3    	bl	0x10002e2dc <_vsnprintf+0x10002e2dc>
+100003f94: aa1403e0    	mov	x0, x20
+100003f98: 9400a805    	bl	0x10002dfac <_vsnprintf+0x10002dfac>
+
+0000000100003f9c <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE>:
+100003f9c: d10383ff    	sub	sp, sp, #0xe0
+100003fa0: a9086ffc    	stp	x28, x27, [sp, #0x80]
+100003fa4: a90967fa    	stp	x26, x25, [sp, #0x90]
+100003fa8: a90a5ff8    	stp	x24, x23, [sp, #0xa0]
+100003fac: a90b57f6    	stp	x22, x21, [sp, #0xb0]
+100003fb0: a90c4ff4    	stp	x20, x19, [sp, #0xc0]
+100003fb4: a90d7bfd    	stp	x29, x30, [sp, #0xd0]
+100003fb8: 910343fd    	add	x29, sp, #0xd0
+100003fbc: aa0803f3    	mov	x19, x8
+100003fc0: f9002fe0    	str	x0, [sp, #0x58]
+100003fc4: f9400415    	ldr	x21, [x0, #0x8]
+100003fc8: f9400028    	ldr	x8, [x1]
+100003fcc: eb0802bf    	cmp	x21, x8
+100003fd0: 54002621    	b.ne	0x100004494 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x4f8>
+100003fd4: aa0203f8    	mov	x24, x2
+100003fd8: f9400048    	ldr	x8, [x2]
+100003fdc: b40024c8    	cbz	x8, 0x100004474 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x4d8>
+100003fe0: f9400708    	ldr	x8, [x24, #0x8]
+100003fe4: b4002488    	cbz	x8, 0x100004474 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x4d8>
+100003fe8: f9400b08    	ldr	x8, [x24, #0x10]
+100003fec: b4002448    	cbz	x8, 0x100004474 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x4d8>
+100003ff0: aa0103f4    	mov	x20, x1
+100003ff4: f9402fe8    	ldr	x8, [sp, #0x58]
+100003ff8: f9400116    	ldr	x22, [x8]
+100003ffc: f9400437    	ldr	x23, [x1, #0x8]
+100004000: aa1303e0    	mov	x0, x19
+100004004: aa1603e1    	mov	x1, x22
+100004008: aa1703e2    	mov	x2, x23
+10000400c: 97fffd3d    	bl	0x100003500 <__ZN9inference6MatrixC2Emm>
+100004010: b4001cd5    	cbz	x21, 0x1000043a8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x40c>
+100004014: b4001cb6    	cbz	x22, 0x1000043a8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x40c>
+100004018: b4001c97    	cbz	x23, 0x1000043a8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x40c>
+10000401c: d280000a    	mov	x10, #0x0               ; =0
+100004020: a940af08    	ldp	x8, x11, [x24, #0x8]
+100004024: a9012ff6    	stp	x22, x11, [sp, #0x10]
+100004028: f9400309    	ldr	x9, [x24]
+10000402c: a903a3f5    	stp	x21, x8, [sp, #0x38]
+100004030: a9005fe9    	stp	x9, x23, [sp]
+100004034: 14000006    	b	0x10000404c <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0xb0>
+100004038: f94037e8    	ldr	x8, [sp, #0x68]
+10000403c: aa0803ea    	mov	x10, x8
+100004040: eb16011f    	cmp	x8, x22
+100004044: f94003e9    	ldr	x9, [sp]
+100004048: 54001b02    	b.hs	0x1000043a8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x40c>
+10000404c: cb0a02c8    	sub	x8, x22, x10
+100004050: eb09011f    	cmp	x8, x9
+100004054: 9a893108    	csel	x8, x8, x9, lo
+100004058: 8b0a0109    	add	x9, x8, x10
+10000405c: f90037e9    	str	x9, [sp, #0x68]
+100004060: eb09015f    	cmp	x10, x9
+100004064: 54fffea2    	b.hs	0x100004038 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x9c>
+100004068: d2800006    	mov	x6, #0x0                ; =0
+10000406c: d1000509    	sub	x9, x8, #0x1
+100004070: 92400508    	and	x8, x8, #0x3
+100004074: a902a3e9    	stp	x9, x8, [sp, #0x28]
+100004078: d37ef548    	lsl	x8, x10, #2
+10000407c: f90013e8    	str	x8, [sp, #0x20]
+100004080: f90033ea    	str	x10, [sp, #0x60]
+100004084: 14000006    	b	0x10000409c <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x100>
+100004088: aa1103e6    	mov	x6, x17
+10000408c: a940dbf7    	ldp	x23, x22, [sp, #0x8]
+100004090: eb17023f    	cmp	x17, x23
+100004094: f94033ea    	ldr	x10, [sp, #0x60]
+100004098: 54fffd02    	b.hs	0x100004038 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x9c>
+10000409c: cb0602e8    	sub	x8, x23, x6
+1000040a0: f9400fe9    	ldr	x9, [sp, #0x18]
+1000040a4: eb09011f    	cmp	x8, x9
+1000040a8: 9a893108    	csel	x8, x8, x9, lo
+1000040ac: 8b060111    	add	x17, x8, x6
+1000040b0: eb1100df    	cmp	x6, x17
+1000040b4: 54001122    	b.hs	0x1000042d8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x33c>
+1000040b8: d280001c    	mov	x28, #0x0               ; =0
+1000040bc: d37ef4c1    	lsl	x1, x6, #2
+1000040c0: 910004c8    	add	x8, x6, #0x1
+1000040c4: eb08023f    	cmp	x17, x8
+1000040c8: 9a868628    	csinc	x8, x17, x6, hi
+1000040cc: aa2603e9    	mvn	x9, x6
+1000040d0: 8b090103    	add	x3, x8, x9
+1000040d4: 14000005    	b	0x1000040e8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x14c>
+1000040d8: aa0403fc    	mov	x28, x4
+1000040dc: f9401ff5    	ldr	x21, [sp, #0x38]
+1000040e0: eb15009f    	cmp	x4, x21
+1000040e4: 54fffd22    	b.hs	0x100004088 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0xec>
+1000040e8: cb1c02a8    	sub	x8, x21, x28
+1000040ec: f94023e9    	ldr	x9, [sp, #0x40]
+1000040f0: eb09011f    	cmp	x8, x9
+1000040f4: 9a893108    	csel	x8, x8, x9, lo
+1000040f8: 8b1c0104    	add	x4, x8, x28
+1000040fc: eb04039f    	cmp	x28, x4
+100004100: 54fffec2    	b.hs	0x1000040d8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x13c>
+100004104: f81a03bf    	stur	xzr, [x29, #-0x60]
+100004108: a945ebe8    	ldp	x8, x26, [sp, #0x58]
+10000410c: f9400108    	ldr	x8, [x8]
+100004110: eb08035f    	cmp	x26, x8
+100004114: 9a888349    	csel	x9, x26, x8, hi
+100004118: d37ef788    	lsl	x8, x28, #2
+10000411c: a904a7e8    	stp	x8, x9, [sp, #0x48]
+100004120: f94013f8    	ldr	x24, [sp, #0x20]
+100004124: f9402be8    	ldr	x8, [sp, #0x50]
+100004128: eb08035f    	cmp	x26, x8
+10000412c: 540014e0    	b.eq	0x1000043c8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x42c>
+100004130: d280001b    	mov	x27, #0x0               ; =0
+100004134: f94033e8    	ldr	x8, [sp, #0x60]
+100004138: f85a03a9    	ldur	x9, [x29, #-0x60]
+10000413c: 8b090108    	add	x8, x8, x9
+100004140: d37ef508    	lsl	x8, x8, #2
+100004144: f81a83a8    	stur	x8, [x29, #-0x58]
+100004148: f9402fe9    	ldr	x9, [sp, #0x58]
+10000414c: a940a528    	ldp	x8, x9, [x9, #0x8]
+100004150: 9b1a7d0a    	mul	x10, x8, x26
+100004154: 8b0a093e    	add	x30, x9, x10, lsl #2
+100004158: f9400289    	ldr	x9, [x20]
+10000415c: eb08039f    	cmp	x28, x8
+100004160: 9a88838b    	csel	x11, x28, x8, hi
+100004164: eb09039f    	cmp	x28, x9
+100004168: 9a898396    	csel	x22, x28, x9, hi
+10000416c: f94027e7    	ldr	x7, [sp, #0x48]
+100004170: aa1c03e2    	mov	x2, x28
+100004174: eb0b005f    	cmp	x2, x11
+100004178: 54001280    	b.eq	0x1000043c8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x42c>
+10000417c: eb16005f    	cmp	x2, x22
+100004180: 54001580    	b.eq	0x100004430 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x494>
+100004184: f940068f    	ldr	x15, [x20, #0x8]
+100004188: f9400268    	ldr	x8, [x19]
+10000418c: eb08035f    	cmp	x26, x8
+100004190: 540013e2    	b.hs	0x10000440c <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x470>
+100004194: bc627bc0    	ldr	s0, [x30, x2, lsl #2]
+100004198: f9400a99    	ldr	x25, [x20, #0x10]
+10000419c: a940a66c    	ldp	x12, x9, [x19, #0x8]
+1000041a0: eb0f00df    	cmp	x6, x15
+1000041a4: 9a8f80d0    	csel	x16, x6, x15, hi
+1000041a8: eb0c00df    	cmp	x6, x12
+1000041ac: 9a8c80ce    	csel	x14, x6, x12, hi
+1000041b0: cb0601c8    	sub	x8, x14, x6
+1000041b4: eb08007f    	cmp	x3, x8
+1000041b8: 9a883068    	csel	x8, x3, x8, lo
+1000041bc: cb06020a    	sub	x10, x16, x6
+1000041c0: eb0a011f    	cmp	x8, x10
+1000041c4: 9a8a310a    	csel	x10, x8, x10, lo
+1000041c8: 91000548    	add	x8, x10, #0x1
+1000041cc: aa0603e0    	mov	x0, x6
+1000041d0: f100451f    	cmp	x8, #0x11
+1000041d4: 540004c3    	b.lo	0x10000426c <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x2d0>
+1000041d8: 8b1b038d    	add	x13, x28, x27
+1000041dc: d37ef5a0    	lsl	x0, x13, #2
+1000041e0: 8b01012d    	add	x13, x9, x1
+1000041e4: f85a83a5    	ldur	x5, [x29, #-0x58]
+1000041e8: 9b0c34b5    	madd	x21, x5, x12, x13
+1000041ec: d37ef545    	lsl	x5, x10, #2
+1000041f0: 8b0502aa    	add	x10, x21, x5
+1000041f4: 91001157    	add	x23, x10, #0x4
+1000041f8: 8b01032a    	add	x10, x25, x1
+1000041fc: 9b0029e0    	madd	x0, x15, x0, x10
+100004200: 8b050005    	add	x5, x0, x5
+100004204: 910010a5    	add	x5, x5, #0x4
+100004208: eb0502bf    	cmp	x21, x5
+10000420c: fa573002    	ccmp	x0, x23, #0x2, lo
+100004210: aa0603e0    	mov	x0, x6
+100004214: 540002c3    	b.lo	0x10000426c <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x2d0>
+100004218: f2400d00    	ands	x0, x8, #0xf
+10000421c: 52800205    	mov	w5, #0x10               ; =16
+100004220: 9a8000a0    	csel	x0, x5, x0, eq
+100004224: cb000115    	sub	x21, x8, x0
+100004228: 8b1500c0    	add	x0, x6, x21
+10000422c: 9b0729e8    	madd	x8, x15, x7, x10
+100004230: 91008108    	add	x8, x8, #0x20
+100004234: 9b0c370a    	madd	x10, x24, x12, x13
+100004238: 9100814d    	add	x13, x10, #0x20
+10000423c: ad7f0901    	ldp	q1, q2, [x8, #-0x20]
+100004240: acc21103    	ldp	q3, q4, [x8], #0x40
+100004244: ad7f19a5    	ldp	q5, q6, [x13, #-0x20]
+100004248: ad4041a7    	ldp	q7, q16, [x13]
+10000424c: 4f801025    	fmla.4s	v5, v1, v0[0]
+100004250: 4f801046    	fmla.4s	v6, v2, v0[0]
+100004254: 4f801067    	fmla.4s	v7, v3, v0[0]
+100004258: 4f801090    	fmla.4s	v16, v4, v0[0]
+10000425c: ad3f19a5    	stp	q5, q6, [x13, #-0x20]
+100004260: ac8241a7    	stp	q7, q16, [x13], #0x40
+100004264: f10042b5    	subs	x21, x21, #0x10
+100004268: 54fffea1    	b.ne	0x10000423c <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x2a0>
+10000426c: 9b0c2708    	madd	x8, x24, x12, x9
+100004270: 9b0765e9    	madd	x9, x15, x7, x25
+100004274: eb00021f    	cmp	x16, x0
+100004278: 54000dc0    	b.eq	0x100004430 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x494>
+10000427c: eb0001df    	cmp	x14, x0
+100004280: 54000ca0    	b.eq	0x100004414 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x478>
+100004284: bc607921    	ldr	s1, [x9, x0, lsl #2]
+100004288: bc607902    	ldr	s2, [x8, x0, lsl #2]
+10000428c: 1f010801    	fmadd	s1, s0, s1, s2
+100004290: bc207901    	str	s1, [x8, x0, lsl #2]
+100004294: 91000400    	add	x0, x0, #0x1
+100004298: eb11001f    	cmp	x0, x17
+10000429c: 54fffec3    	b.lo	0x100004274 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x2d8>
+1000042a0: 91000442    	add	x2, x2, #0x1
+1000042a4: 9100077b    	add	x27, x27, #0x1
+1000042a8: 910010e7    	add	x7, x7, #0x4
+1000042ac: eb04005f    	cmp	x2, x4
+1000042b0: 54fff621    	b.ne	0x100004174 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x1d8>
+1000042b4: 9100075a    	add	x26, x26, #0x1
+1000042b8: f85a03a8    	ldur	x8, [x29, #-0x60]
+1000042bc: 91000508    	add	x8, x8, #0x1
+1000042c0: f81a03a8    	stur	x8, [x29, #-0x60]
+1000042c4: 91001318    	add	x24, x24, #0x4
+1000042c8: f94037e8    	ldr	x8, [sp, #0x68]
+1000042cc: eb08035f    	cmp	x26, x8
+1000042d0: 54fff2a1    	b.ne	0x100004124 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x188>
+1000042d4: 17ffff81    	b	0x1000040d8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x13c>
+1000042d8: d280000c    	mov	x12, #0x0               ; =0
+1000042dc: f9402fe8    	ldr	x8, [sp, #0x58]
+1000042e0: a9402109    	ldp	x9, x8, [x8]
+1000042e4: eb09015f    	cmp	x10, x9
+1000042e8: 9a89814b    	csel	x11, x10, x9, hi
+1000042ec: 14000005    	b	0x100004300 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x364>
+1000042f0: aa0903ec    	mov	x12, x9
+1000042f4: f9401ff5    	ldr	x21, [sp, #0x38]
+1000042f8: eb15013f    	cmp	x9, x21
+1000042fc: 54ffec62    	b.hs	0x100004088 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0xec>
+100004300: cb0c02a9    	sub	x9, x21, x12
+100004304: f94023ea    	ldr	x10, [sp, #0x40]
+100004308: eb0a013f    	cmp	x9, x10
+10000430c: 9a8a312a    	csel	x10, x9, x10, lo
+100004310: 8b0c0149    	add	x9, x10, x12
+100004314: eb09019f    	cmp	x12, x9
+100004318: 54fffec2    	b.hs	0x1000042f0 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x354>
+10000431c: eb0c010c    	subs	x12, x8, x12
+100004320: 9a8c33ec    	csel	x12, xzr, x12, lo
+100004324: d100054a    	sub	x10, x10, #0x1
+100004328: eb0a019f    	cmp	x12, x10
+10000432c: 540004e9    	b.ls	0x1000043c8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x42c>
+100004330: f94033ec    	ldr	x12, [sp, #0x60]
+100004334: f9401bea    	ldr	x10, [sp, #0x30]
+100004338: b400010a    	cbz	x10, 0x100004358 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x3bc>
+10000433c: f9401bed    	ldr	x13, [sp, #0x30]
+100004340: f94033ec    	ldr	x12, [sp, #0x60]
+100004344: eb0c017f    	cmp	x11, x12
+100004348: 54000400    	b.eq	0x1000043c8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x42c>
+10000434c: 9100058c    	add	x12, x12, #0x1
+100004350: f10005ad    	subs	x13, x13, #0x1
+100004354: 54ffff81    	b.ne	0x100004344 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x3a8>
+100004358: f94017ea    	ldr	x10, [sp, #0x28]
+10000435c: f1000d5f    	cmp	x10, #0x3
+100004360: 54fffc83    	b.lo	0x1000042f0 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x354>
+100004364: cb0c016d    	sub	x13, x11, x12
+100004368: b400030d    	cbz	x13, 0x1000043c8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x42c>
+10000436c: 9100058a    	add	x10, x12, #0x1
+100004370: eb0b015f    	cmp	x10, x11
+100004374: 540002a0    	b.eq	0x1000043c8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x42c>
+100004378: 9100098a    	add	x10, x12, #0x2
+10000437c: eb0b015f    	cmp	x10, x11
+100004380: 54000240    	b.eq	0x1000043c8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x42c>
+100004384: 91000d8a    	add	x10, x12, #0x3
+100004388: eb0b015f    	cmp	x10, x11
+10000438c: 540001e0    	b.eq	0x1000043c8 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x42c>
+100004390: 9100118c    	add	x12, x12, #0x4
+100004394: d10011ad    	sub	x13, x13, #0x4
+100004398: f94037ea    	ldr	x10, [sp, #0x68]
+10000439c: eb0a019f    	cmp	x12, x10
+1000043a0: 54fffe41    	b.ne	0x100004368 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x3cc>
+1000043a4: 17ffffd3    	b	0x1000042f0 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x354>
+1000043a8: a94d7bfd    	ldp	x29, x30, [sp, #0xd0]
+1000043ac: a94c4ff4    	ldp	x20, x19, [sp, #0xc0]
+1000043b0: a94b57f6    	ldp	x22, x21, [sp, #0xb0]
+1000043b4: a94a5ff8    	ldp	x24, x23, [sp, #0xa0]
+1000043b8: a94967fa    	ldp	x26, x25, [sp, #0x90]
+1000043bc: a9486ffc    	ldp	x28, x27, [sp, #0x80]
+1000043c0: 910383ff    	add	sp, sp, #0xe0
+1000043c4: d65f03c0    	ret
+1000043c8: 52800200    	mov	w0, #0x10               ; =16
+1000043cc: 9400a7cd    	bl	0x10002e300 <_vsnprintf+0x10002e300>
+1000043d0: aa0003f5    	mov	x21, x0
+1000043d4: b0000161    	adrp	x1, 0x100031000 <__ZNSt3__119piecewise_constructE+0x110>
+1000043d8: 9120a021    	add	x1, x1, #0x828
+1000043dc: 9400a703    	bl	0x10002dfe8 <_vsnprintf+0x10002dfe8>
+1000043e0: 90000188    	adrp	x8, 0x100034000 <_vsnprintf+0x100034000>
+1000043e4: f9417908    	ldr	x8, [x8, #0x2f0]
+1000043e8: 91004108    	add	x8, x8, #0x10
+1000043ec: f90002a8    	str	x8, [x21]
+1000043f0: 90000181    	adrp	x1, 0x100034000 <_vsnprintf+0x100034000>
+1000043f4: f9427421    	ldr	x1, [x1, #0x4e8]
+1000043f8: 90000182    	adrp	x2, 0x100034000 <_vsnprintf+0x100034000>
+1000043fc: f9401842    	ldr	x2, [x2, #0x30]
+100004400: aa1503e0    	mov	x0, x21
+100004404: 9400a7da    	bl	0x10002e36c <_vsnprintf+0x10002e36c>
+100004408: 1400001a    	b	0x100004470 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x4d4>
+10000440c: eb0f00df    	cmp	x6, x15
+100004410: 54000102    	b.hs	0x100004430 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x494>
+100004414: 52800200    	mov	w0, #0x10               ; =16
+100004418: 9400a7ba    	bl	0x10002e300 <_vsnprintf+0x10002e300>
+10000441c: aa0003f5    	mov	x21, x0
+100004420: b0000161    	adrp	x1, 0x100031000 <__ZNSt3__119piecewise_constructE+0x110>
+100004424: 9120a021    	add	x1, x1, #0x828
+100004428: 9400a6f0    	bl	0x10002dfe8 <_vsnprintf+0x10002dfe8>
+10000442c: 14000007    	b	0x100004448 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x4ac>
+100004430: 52800200    	mov	w0, #0x10               ; =16
+100004434: 9400a7b3    	bl	0x10002e300 <_vsnprintf+0x10002e300>
+100004438: aa0003f5    	mov	x21, x0
+10000443c: b0000161    	adrp	x1, 0x100031000 <__ZNSt3__119piecewise_constructE+0x110>
+100004440: 9120a021    	add	x1, x1, #0x828
+100004444: 9400a6e9    	bl	0x10002dfe8 <_vsnprintf+0x10002dfe8>
+100004448: 90000188    	adrp	x8, 0x100034000 <_vsnprintf+0x100034000>
+10000444c: f9417908    	ldr	x8, [x8, #0x2f0]
+100004450: 91004108    	add	x8, x8, #0x10
+100004454: f90002a8    	str	x8, [x21]
+100004458: 90000181    	adrp	x1, 0x100034000 <_vsnprintf+0x100034000>
+10000445c: f9427421    	ldr	x1, [x1, #0x4e8]
+100004460: 90000182    	adrp	x2, 0x100034000 <_vsnprintf+0x100034000>
+100004464: f9401842    	ldr	x2, [x2, #0x30]
+100004468: aa1503e0    	mov	x0, x21
+10000446c: 9400a7c0    	bl	0x10002e36c <_vsnprintf+0x10002e36c>
+100004470: d4200020    	brk	#0x1
+100004474: 52800200    	mov	w0, #0x10               ; =16
+100004478: 9400a7a2    	bl	0x10002e300 <_vsnprintf+0x10002e300>
+10000447c: aa0003f3    	mov	x19, x0
+100004480: b0000161    	adrp	x1, 0x100031000 <__ZNSt3__119piecewise_constructE+0x110>
+100004484: 9121f421    	add	x1, x1, #0x87d
+100004488: 97fffe0e    	bl	0x100003cc0 <__ZNSt16invalid_argumentC1B9nqe210106EPKc>
+10000448c: aa1303e0    	mov	x0, x19
+100004490: 9400a5b9    	bl	0x10002db74 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_.cold.1>
+100004494: 52800200    	mov	w0, #0x10               ; =16
+100004498: 9400a79a    	bl	0x10002e300 <_vsnprintf+0x10002e300>
+10000449c: aa0003f3    	mov	x19, x0
+1000044a0: b0000161    	adrp	x1, 0x100031000 <__ZNSt3__119piecewise_constructE+0x110>
+1000044a4: 91211021    	add	x1, x1, #0x844
+1000044a8: 97fffe06    	bl	0x100003cc0 <__ZNSt16invalid_argumentC1B9nqe210106EPKc>
+1000044ac: aa1303e0    	mov	x0, x19
+1000044b0: 9400a5b1    	bl	0x10002db74 <__ZN9inference16matmul_referenceERKNS_6MatrixES2_.cold.1>
+1000044b4: aa0003f4    	mov	x20, x0
+1000044b8: aa1303e0    	mov	x0, x19
+1000044bc: 9400a79d    	bl	0x10002e330 <_vsnprintf+0x10002e330>
+1000044c0: aa1403e0    	mov	x0, x20
+1000044c4: 9400a6ba    	bl	0x10002dfac <_vsnprintf+0x10002dfac>
+1000044c8: aa0003f4    	mov	x20, x0
+1000044cc: aa1303e0    	mov	x0, x19
+1000044d0: 9400a798    	bl	0x10002e330 <_vsnprintf+0x10002e330>
+1000044d4: aa1403e0    	mov	x0, x20
+1000044d8: 9400a6b5    	bl	0x10002dfac <_vsnprintf+0x10002dfac>
+1000044dc: 14000013    	b	0x100004528 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x58c>
+1000044e0: aa0003f4    	mov	x20, x0
+1000044e4: aa1503e0    	mov	x0, x21
+1000044e8: 9400a792    	bl	0x10002e330 <_vsnprintf+0x10002e330>
+1000044ec: f9400a60    	ldr	x0, [x19, #0x10]
+1000044f0: b5000220    	cbnz	x0, 0x100004534 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x598>
+1000044f4: 14000012    	b	0x10000453c <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x5a0>
+1000044f8: aa0003f4    	mov	x20, x0
+1000044fc: aa1503e0    	mov	x0, x21
+100004500: 9400a78c    	bl	0x10002e330 <_vsnprintf+0x10002e330>
+100004504: f9400a60    	ldr	x0, [x19, #0x10]
+100004508: b5000160    	cbnz	x0, 0x100004534 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x598>
+10000450c: 1400000c    	b	0x10000453c <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x5a0>
+100004510: aa0003f4    	mov	x20, x0
+100004514: aa1503e0    	mov	x0, x21
+100004518: 9400a786    	bl	0x10002e330 <_vsnprintf+0x10002e330>
+10000451c: f9400a60    	ldr	x0, [x19, #0x10]
+100004520: b50000a0    	cbnz	x0, 0x100004534 <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x598>
+100004524: 14000006    	b	0x10000453c <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x5a0>
+100004528: aa0003f4    	mov	x20, x0
+10000452c: f9400a60    	ldr	x0, [x19, #0x10]
+100004530: b4000060    	cbz	x0, 0x10000453c <__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE+0x5a0>
+100004534: f9000e60    	str	x0, [x19, #0x18]
+100004538: 9400a769    	bl	0x10002e2dc <_vsnprintf+0x10002e2dc>
+10000453c: aa1403e0    	mov	x0, x20
+100004540: 9400a69b    	bl	0x10002dfac <_vsnprintf+0x10002dfac>

@@ -1,0 +1,54 @@
+#ifndef MATRIX_HPP
+#define MATRIX_HPP
+#include <cstddef>
+#include <vector>
+
+namespace inference {
+
+class Matrix {
+public:
+    Matrix(std::size_t rows, std::size_t cols);
+
+//copy constructor & assignment
+    Matrix(const Matrix& other) = default;
+    // If copying throws, the destination's shape and values remain unchanged.
+    Matrix& operator=(const Matrix& other);
+
+// move semantics
+    Matrix(Matrix&& other) noexcept;
+    Matrix& operator=(Matrix&& other) noexcept;
+
+// getters for rows and cols
+    std::size_t rows() const noexcept;
+    std::size_t cols() const noexcept;
+
+// functions to view (const) a specific value in the matrix
+    float& operator()(std::size_t row, std::size_t col);
+    const float& operator()(std::size_t row, std::size_t col) const;
+
+// returns read only & mutable version of matrix
+    float* data() noexcept;
+    const float* data() const noexcept;
+
+private:
+    std::size_t rows_;
+    std::size_t cols_;
+    std::vector<float> data_;
+};
+
+Matrix matmul_reference(const Matrix& a, const Matrix& b);
+
+Matrix matmul_ikj(const Matrix& a, const Matrix& b);
+
+struct MatmulTiles {
+    std::size_t bm;
+    std::size_t bk;
+    std::size_t bn;
+};
+
+// Fresh zero-initialized output; inputs may be the same Matrix.
+// Rejects incompatible shapes and zero tile dimensions, including empty inputs.
+Matrix matmul_blocked(const Matrix& a, const Matrix& b, MatmulTiles tiles);
+}
+
+#endif // MATRIX_HPP

@@ -1,0 +1,34 @@
+src/matrix.cpp:83:21: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+   83 |                     for(std::size_t k = 0; k < b.rows(); ++k){
+      |                     ^
+src/matrix.cpp:86:38: remark: loop not vectorized: call instruction cannot be vectorized [-Rpass-analysis=loop-vectorize]
+   86 |                     result(row, col) = total;
+      |                                      ^
+src/matrix.cpp:80:13: remark: loop not vectorized: instruction cannot be vectorized [-Rpass-analysis=loop-vectorize]
+   80 |             for(std::size_t row = 0; row < result.rows(); ++row){
+      |             ^
+src/matrix.cpp:80:13: remark: loop not vectorized [-Rpass-missed=loop-vectorize]
+src/matrix.cpp:103:17: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+  103 |                 for(std::size_t col = 0; col < b.cols(); ++ col){
+      |                 ^
+src/matrix.cpp:132:25: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+  132 |                         for (std::size_t j = jj; j < j_end; ++j) {
+      |                         ^
+src/matrix.cpp:129:17: remark: Interleaving not supported for loops with uncountable early exits [-Rpass-analysis=loop-vectorize]
+  129 |                 for (std::size_t i = ii; i < i_end; ++i) {
+      |                 ^
+src/matrix.cpp:129:17: remark: the cost-model indicates that vectorization is not beneficial [-Rpass-missed=loop-vectorize]
+src/matrix.cpp:129:17: remark: the cost-model indicates that interleaving is not beneficial and is explicitly disabled or interleave count is set to 1 [-Rpass-missed=loop-vectorize]
+In file included from src/matrix.cpp:1:
+In file included from include/inference/matrix.hpp:4:
+In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/vector:314:
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__vector/vector.h:935:3: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+  935 |   for (pointer __pos = __tx.__pos_; __pos != __new_end; __tx.__pos_ = ++__pos) {
+      |   ^
+In file included from src/matrix.cpp:1:
+In file included from include/inference/matrix.hpp:4:
+In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/vector:314:
+In file included from /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__vector/vector.h:49:
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__split_buffer:257:3: remark: vectorized loop (vectorization width: 4, interleaved count: 4) [-Rpass=loop-vectorize]
+  257 |   for (; __tx.__pos_ != __tx.__end_; ++__tx.__pos_) {
+      |   ^
