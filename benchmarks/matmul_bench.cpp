@@ -53,6 +53,8 @@ static void MatmulShapes(benchmark::internal::Benchmark* benchmark) {
   ->Args({32, 32, 32})
   ->Args({128, 128, 128})
   ->Args({256, 256, 256})
+  ->Args({512, 512, 512})
+  ->Args({129, 257, 131})
   ->Args({63,65,67})
   ->Args({1, 256, 256})
   ->Args({256,256,1})
@@ -70,3 +72,22 @@ static void MatmulShapes(benchmark::internal::Benchmark* benchmark) {
 
 BENCHMARK(BM_MatmulReferenceAllocationIncluded)->Apply(MatmulShapes);
 BENCHMARK(BM_MatmulIkjAllocationIncluded)->Apply(MatmulShapes);
+
+// Wrappers select configuration outside the kernel without indirect dispatch.
+template <std::size_t BM, std::size_t BK, std::size_t BN>
+static inference::Matrix Blocked(const inference::Matrix& a, const inference::Matrix& b) {
+  return inference::matmul_blocked(a, b, {BM, BK, BN});
+}
+
+static void BM_MatmulBlocked8x32x64AllocationIncluded(benchmark::State& state) {
+  MatmulAllocationIncluded<Blocked<8, 32, 64>>(state);
+}
+static void BM_MatmulBlocked16x32x64AllocationIncluded(benchmark::State& state) {
+  MatmulAllocationIncluded<Blocked<16, 32, 64>>(state);
+}
+static void BM_MatmulBlocked16x64x64AllocationIncluded(benchmark::State& state) {
+  MatmulAllocationIncluded<Blocked<16, 64, 64>>(state);
+}
+BENCHMARK(BM_MatmulBlocked8x32x64AllocationIncluded)->Apply(MatmulShapes);
+BENCHMARK(BM_MatmulBlocked16x32x64AllocationIncluded)->Apply(MatmulShapes);
+BENCHMARK(BM_MatmulBlocked16x64x64AllocationIncluded)->Apply(MatmulShapes);
