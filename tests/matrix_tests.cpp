@@ -655,86 +655,150 @@ void dot_error_bound_checks() {
         "Error bound accepted NaN");
 }
 
+struct Shape { std::size_t m, k, n; };
+
+template <typename Multiply>
+void check_oracle_shape(Multiply multiply, Shape shape) {
+    const auto [m, k, n] = shape;
+    // Two random fixtures, exact benchmark inputs, and cancellation-heavy
+    // binary fractions. The latter sum to zero for even K and one residual
+    // product for odd K, so relative-only tolerances would be inappropriate.
+    for (unsigned pattern = 0; pattern < 4; ++pattern) {
+        try {
+            const unsigned seed = pattern == 0 ? 17u : 20260912u;
+            std::mt19937 random(seed);
+            const auto next_value = [&] {
+                return static_cast<float>(static_cast<int>(random() % 2001) - 1000)
+                       / 1000.0f;
+            };
+            std::vector<std::vector<float>> a_rows(m, std::vector<float>(k));
+            std::vector<std::vector<float>> b_cols(n, std::vector<float>(k));
+            Matrix a(m, k), b(k, n);
+            for (std::size_t row = 0; row < m; ++row) {
+                for (std::size_t inner = 0; inner < k; ++inner) {
+                    float value = pattern < 2 ? next_value()
+                        : pattern == 2 ? static_cast<float>(static_cast<int>((row * k + inner) % 17) - 8) / 8.0f
+                        : static_cast<float>(row % 7 + 1) / 8.0f;
+                    a_rows[row][inner] = value;
+                    a.data()[row * k + inner] = value;
+                }
+            }
+            for (std::size_t col = 0; col < n; ++col) {
+                for (std::size_t inner = 0; inner < k; ++inner) {
+                    float value = pattern < 2 ? next_value()
+                        : pattern == 2 ? static_cast<float>(static_cast<int>((inner * n + col) % 13) - 6) / 6.0f
+                        : (inner % 2 == 0 ? 1.0f : -1.0f) * static_cast<float>(col % 7 + 1) / 8.0f;
+                    b_cols[col][inner] = value;
+                    b.data()[inner * n + col] = value;
+                }
+            }
+            const Matrix original_a = a, original_b = b;
+            const Matrix actual = multiply(a, b);
+            check(actual.rows() == m && actual.cols() == n, "Incorrect large-product shape");
+            check_matrix_close(a, original_a, 0.0, 0.0);
+            check_matrix_close(b, original_b, 0.0, 0.0);
+            for (std::size_t col = 0; col < n; ++col) {
+                for (std::size_t row = 0; row < m; ++row) {
+                    double expected = 0.0, sum_abs = 0.0;
+                    for (std::size_t inner = 0; inner < k; ++inner) {
+                        const double product = static_cast<double>(a_rows[row][inner])
+                                               * static_cast<double>(b_cols[col][inner]);
+                        expected += product;
+                        sum_abs += std::abs(product);
+                    }
+                    try {
+                        check_dot(actual(row, col), expected, sum_abs, k);
+                        if (pattern == 3) {
+                            const double exact = k % 2 == 0 ? 0.0
+                                : static_cast<double>(a_rows[row][0]) * b_cols[col][0];
+                            check(actual(row, col) == exact,
+                                  "Exactly representable cancellation fixture failed");
+                        }
+                    } catch (const std::exception& error) {
+                        std::ostringstream message;
+                        message << "element=(" << row << ',' << col << "): " << error.what();
+                        throw std::runtime_error(message.str());
+                    }
+                }
+            }
+        } catch (const std::exception& error) {
+            std::ostringstream message;
+            message << "M=" << m << ", K=" << k << ", N=" << n
+                    << ", pattern=" << pattern << ": " << error.what();
+            throw std::runtime_error(message.str());
+        }
+    }
+}
+
 void matmul_large_reductions(Matmul multiply) {
-    struct Shape { std::size_t m, k, n; };
     // Every baseline and memory-access benchmark shape plus longer reductions.
     // Keep the oracle independent of production indexing and traversal.
     for (const auto [m, k, n] : {
              Shape{1, 1, 1}, Shape{32, 32, 32}, Shape{128, 128, 128},
-             Shape{256, 256, 256}, Shape{63, 65, 67}, Shape{1, 256, 256},
+             Shape{512, 512, 512}, Shape{129, 257, 131}, Shape{256, 256, 256}, Shape{63, 65, 67}, Shape{1, 256, 256},
              Shape{256, 256, 1}, Shape{3, 255, 5}, Shape{5, 257, 3},
              Shape{1, 1024, 17}, Shape{17, 1024, 1}, Shape{3, 1025, 7},
              Shape{1, 64, 64}, Shape{64, 64, 1}, Shape{1, 128, 128}, Shape{128, 128, 1}, Shape{1, 255, 255}, Shape{255, 255, 1}, Shape{1, 257, 257}, Shape{257, 257, 1}, Shape{1, 512, 512}, Shape{512, 512, 1}, Shape{1, 1024, 1024}, Shape{1024, 1024, 1},
              Shape{32, 256, 1}, Shape{32, 256, 4}, Shape{32, 256, 16}, Shape{32, 256, 17}, Shape{32, 256, 64}, Shape{32, 256, 255}, Shape{32, 256, 256}, Shape{32, 256, 257}, Shape{32, 256, 512}, Shape{32, 256, 1024}}) {
-        // Two random fixtures, exact benchmark inputs, and cancellation-heavy
-        // binary fractions. The latter sum to zero for even K and one residual
-        // product for odd K, so relative-only tolerances would be inappropriate.
-        for (unsigned pattern = 0; pattern < 4; ++pattern) {
-            try {
-                const unsigned seed = pattern == 0 ? 17u : 20260912u;
-                std::mt19937 random(seed);
-                const auto next_value = [&] {
-                    return static_cast<float>(static_cast<int>(random() % 2001) - 1000)
-                           / 1000.0f;
-                };
-                std::vector<std::vector<float>> a_rows(m, std::vector<float>(k));
-                std::vector<std::vector<float>> b_cols(n, std::vector<float>(k));
-                Matrix a(m, k), b(k, n);
-                for (std::size_t row = 0; row < m; ++row) {
-                    for (std::size_t inner = 0; inner < k; ++inner) {
-                        float value = pattern < 2 ? next_value()
-                            : pattern == 2 ? static_cast<float>(static_cast<int>((row * k + inner) % 17) - 8) / 8.0f
-                            : static_cast<float>(row % 7 + 1) / 8.0f;
-                        a_rows[row][inner] = value;
-                        a.data()[row * k + inner] = value;
+        check_oracle_shape(multiply, {m, k, n});
+    }
+}
+
+template <std::size_t BM, std::size_t BK, std::size_t BN>
+Matrix blocked(const Matrix& a, const Matrix& b) {
+    return inference::matmul_blocked(a, b, {BM, BK, BN});
+}
+
+void blocked_boundaries() {
+    for (const auto tiles : {inference::MatmulTiles{8, 32, 64},
+                             inference::MatmulTiles{16, 32, 64},
+                             inference::MatmulTiles{16, 64, 64}}) {
+        const auto multiply = [tiles](const Matrix& a, const Matrix& b) {
+            return inference::matmul_blocked(a, b, tiles);
+        };
+        // Cross-product covers isolated and simultaneous boundary remainders.
+        for (auto m : {tiles.bm - 1, tiles.bm, tiles.bm + 1, 2 * tiles.bm + 1}) {
+            for (auto k : {tiles.bk - 1, tiles.bk, tiles.bk + 1, 2 * tiles.bk + 1}) {
+                for (auto n : {tiles.bn - 1, tiles.bn, tiles.bn + 1, 2 * tiles.bn + 1}) {
+                    try {
+                        check_oracle_shape(multiply, {m, k, n});
+                    } catch (const std::exception& error) {
+                        std::ostringstream message;
+                        message << "tiles=" << tiles.bm << ',' << tiles.bk << ',' << tiles.bn
+                                << ": " << error.what();
+                        throw std::runtime_error(message.str());
                     }
                 }
-                for (std::size_t col = 0; col < n; ++col) {
-                    for (std::size_t inner = 0; inner < k; ++inner) {
-                        float value = pattern < 2 ? next_value()
-                            : pattern == 2 ? static_cast<float>(static_cast<int>((inner * n + col) % 13) - 6) / 6.0f
-                            : (inner % 2 == 0 ? 1.0f : -1.0f) * static_cast<float>(col % 7 + 1) / 8.0f;
-                        b_cols[col][inner] = value;
-                        b.data()[inner * n + col] = value;
-                    }
-                }
-                const Matrix original_a = a, original_b = b;
-                const Matrix actual = multiply(a, b);
-                check(actual.rows() == m && actual.cols() == n, "Incorrect large-product shape");
-                check_matrix_close(a, original_a, 0.0, 0.0);
-                check_matrix_close(b, original_b, 0.0, 0.0);
-                for (std::size_t col = 0; col < n; ++col) {
-                    for (std::size_t row = 0; row < m; ++row) {
-                        double expected = 0.0, sum_abs = 0.0;
-                        for (std::size_t inner = 0; inner < k; ++inner) {
-                            const double product = static_cast<double>(a_rows[row][inner])
-                                                   * static_cast<double>(b_cols[col][inner]);
-                            expected += product;
-                            sum_abs += std::abs(product);
-                        }
-                        try {
-                            check_dot(actual(row, col), expected, sum_abs, k);
-                            if (pattern == 3) {
-                                const double exact = k % 2 == 0 ? 0.0
-                                    : static_cast<double>(a_rows[row][0]) * b_cols[col][0];
-                                check(actual(row, col) == exact,
-                                      "Exactly representable cancellation fixture failed");
-                            }
-                        } catch (const std::exception& error) {
-                            std::ostringstream message;
-                            message << "element=(" << row << ',' << col << "): " << error.what();
-                            throw std::runtime_error(message.str());
-                        }
-                    }
-                }
-            } catch (const std::exception& error) {
-                std::ostringstream message;
-                message << "M=" << m << ", K=" << k << ", N=" << n
-                        << ", pattern=" << pattern << ": " << error.what();
-                throw std::runtime_error(message.str());
             }
         }
     }
+    const auto largest = std::numeric_limits<std::size_t>::max();
+    for (const auto tiles : {inference::MatmulTiles{1, 1, 1},
+                             inference::MatmulTiles{3, 5, 7},
+                             inference::MatmulTiles{largest, largest, largest}}) {
+        check_oracle_shape([tiles](const Matrix& a, const Matrix& b) {
+            return inference::matmul_blocked(a, b, tiles);
+        }, {7, 11, 13});
+    }
+}
+
+void blocked_invalid_and_empty() {
+    for (const auto tiles : {inference::MatmulTiles{0, 32, 64},
+                             inference::MatmulTiles{8, 0, 64},
+                             inference::MatmulTiles{8, 32, 0}}) {
+        for (auto shape : {Shape{2, 3, 4}, Shape{0, 3, 4}, Shape{2, 0, 4}, Shape{2, 3, 0}}) {
+            expect_throw<std::invalid_argument>([&] {
+                (void)inference::matmul_blocked(Matrix(shape.m, shape.k),
+                                              Matrix(shape.k, shape.n), tiles);
+            }, "Zero tile size accepted");
+        }
+    }
+    const auto largest = std::numeric_limits<std::size_t>::max();
+    const auto result = inference::matmul_blocked(Matrix(largest, 0), Matrix(0, 0), {1, 1, 1});
+    check(result.rows() == largest && result.cols() == 0, "Huge empty shape lost");
+    expect_throw<std::length_error>([&] {
+        (void)inference::matmul_blocked(Matrix(largest, 0), Matrix(0, 2), {1, 1, 1});
+    }, "Oversized output accepted");
 }
 
 } // namespace
@@ -745,6 +809,8 @@ int main() {
         void (*run)();
     };
     const Test tests[] = {
+        {"blocked tile boundaries", blocked_boundaries},
+        {"blocked invalid and empty", blocked_invalid_and_empty},
         {"long-reduction error bound", dot_error_bound_checks},
         {"construction and zero initialization", construction},
         {"row-major storage and const/mutable access", row_major_storage},
@@ -766,7 +832,7 @@ int main() {
         void (*run)(Matmul);
     };
     const KernelTest kernel_tests[] = {
-        {"matmul 136 benchmark and long-reduction oracle cases", matmul_large_reductions},
+        {"matmul 144 benchmark and long-reduction oracle cases", matmul_large_reductions},
         {"matmul square", matmul_square},
         {"matmul rectangular", matmul_rectangular},
         {"matmul incompatible shapes", matmul_incompatible_shapes},
@@ -799,7 +865,10 @@ int main() {
     struct Implementation { const char* name; Matmul multiply; };
     for (const auto& implementation : {
              Implementation{"reference", inference::matmul_reference},
-             Implementation{"ikj", inference::matmul_ikj}}) {
+             Implementation{"ikj", inference::matmul_ikj},
+             Implementation{"blocked_8_32_64", blocked<8, 32, 64>},
+             Implementation{"blocked_16_32_64", blocked<16, 32, 64>},
+             Implementation{"blocked_16_64_64", blocked<16, 64, 64>}}) {
         for (const auto& test : kernel_tests) {
             try {
                 test.run(implementation.multiply);

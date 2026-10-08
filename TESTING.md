@@ -75,3 +75,22 @@ two implementations sharing shapes, incomplete comparisons, missing
 shapes/repetitions, duplicate indices, incorrect settings, invalid measurements,
 and exclusion of aggregate rows from repetition counts. The Release benchmark
 build passed all four CTest targets before each Step 7 capture.
+
+## Step 8 coverage
+
+`matmul_blocked` runs the shared contract tests and 1,536 small deterministic
+oracle cases for each of (BM,BK,BN) = (8,32,64), (16,32,64), (16,64,64).
+The large oracle suite now includes 512-square and (129,257,131): 36 shapes,
+four patterns each, for 144 cases per kernel across all five kernels. This
+covers every Step 8 benchmark shape with the existing error bound unchanged.
+
+For each candidate, all 64 combinations of dimensions B-1, B, B+1, and 2*B+1
+are checked with four patterns (768 additional cases). Three further configurations
+(unit tiles, odd tiles, SIZE_MAX tiles) add 12 cases. Validation checks cover zero
+tile dimensions, huge empty shapes, and output-size overflow. Odd tile reductions
+and cancellation fixtures exercise accumulation across reduction boundaries.
+
+Use the commands above with `step8` in place of `step7` for Debug/Release/sanitizer
+builds. The Release benchmark build also runs the Python collector/summarizer
+regressions: multiple candidates, missing candidates, execution orders, saved
+implementation/tile manifests, integrity failures, and historical capture support.
