@@ -1,0 +1,36 @@
+{
+  "source_sha256": "63f413b33aab49616f41cee5f66ad6dce6974c136c0def1b25f1ecb3f47189c6",
+  "header_sha256": "8fe33bb759986e524dc245c15dc4cf155ab91a36fc1f0cf23f9b9acdc14b23a8",
+  "executable_sha256": "2a2fe43fd111a9a098b4b987bfee6711a5418053c1f909db47dc5396f102d998",
+  "compiler_version": "Apple clang version 21.0.0 (clang-2100.0.123.102)\nTarget: arm64-apple-darwin25.6.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+  "assembly_command": [
+    "/usr/bin/c++",
+    "-Iinclude",
+    "-O3",
+    "-DNDEBUG",
+    "-std=gnu++20",
+    "-arch",
+    "arm64",
+    "-Rpass=loop-vectorize",
+    "-Rpass-missed=loop-vectorize",
+    "-Rpass-analysis=loop-vectorize",
+    "-S",
+    "src/matrix.cpp",
+    "-o",
+    "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/profiles/step8-inspection/matrix.s"
+  ],
+  "diagnostics_stderr": "vectorization.txt",
+  "disassembly_command": [
+    "xcrun",
+    "llvm-objdump",
+    "--disassemble",
+    "--disassemble-symbols=__ZN9inference16matmul_referenceERKNS_6MatrixES2_,__ZN9inference10matmul_ikjERKNS_6MatrixES2_,__ZN9inference14matmul_blockedERKNS_6MatrixES2_NS_11MatmulTilesE",
+    "build/benchmark-release/matmul_bench"
+  ],
+  "artifact_sha256": {
+    "matrix.s": "9721d22cc401f6e506cf39cfe8b654808dfbed7bc045d550e88740bba3e8d943",
+    "vectorization.txt": "270c4ba80c01027d999987a84febd72f1da4c907e449b853e5926cd92cf8bcae",
+    "binary-matmul.txt": "6b559a4bc57411fc708435428952169b94f4b6dc101771cf4d4e9bff641d83a0"
+  },
+  "engine_compile_command": "/usr/bin/c++  -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/include -O3 -DNDEBUG -std=gnu++20 -arch arm64 -o CMakeFiles/inference.dir/src/matrix.cpp.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/src/matrix.cpp"
+}
