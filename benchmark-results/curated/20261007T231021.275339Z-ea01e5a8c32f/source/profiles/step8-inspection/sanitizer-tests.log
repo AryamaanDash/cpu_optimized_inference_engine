@@ -1,0 +1,148 @@
+Start testing: Oct 07 15:46 PDT
+----------------------------------------------------------
+1/3 Testing: smoke
+1/3 Test: smoke
+Command: "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/step8-sanitize/inference_demo"
+Directory: /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/step8-sanitize
+"smoke" start time: Oct 07 15:46 PDT
+Output:
+----------------------------------------------------------
+Hello World!
+<end of output>
+Test time =   0.43 sec
+----------------------------------------------------------
+Test Passed.
+"smoke" end time: Oct 07 15:46 PDT
+"smoke" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/3 Testing: matrix
+2/3 Test: matrix
+Command: "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/step8-sanitize/matrix_tests"
+Directory: /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/step8-sanitize
+"matrix" start time: Oct 07 15:46 PDT
+Output:
+----------------------------------------------------------
+PASS: blocked tile boundaries
+PASS: blocked invalid and empty
+PASS: long-reduction error bound
+PASS: construction and zero initialization
+PASS: row-major storage and const/mutable access
+PASS: bounds checking
+PASS: empty shapes
+PASS: oversized shapes
+PASS: copy construction
+PASS: copy assignment
+PASS: copy outlives source
+PASS: move construction
+PASS: move assignment
+PASS: matrix comparison helper
+PASS: comparison absolute and relative tolerance boundaries
+PASS: matrix comparison rejects nonfinite values
+PASS: matrix comparison failure diagnostics
+PASS: reference: matmul 144 benchmark and long-reduction oracle cases
+PASS: reference: matmul square
+PASS: reference: matmul rectangular
+PASS: reference: matmul incompatible shapes
+PASS: reference: matmul_zero_inner_dimension
+PASS: reference: matmul rectangular output
+PASS: reference: matmul scalar
+PASS: reference: matmul dot product
+PASS: reference: matmul outer product
+PASS: reference: matmul mixed signs, fractions, and cancellation
+PASS: reference: matmul left and right identity
+PASS: reference: matmul zero operands
+PASS: reference: matmul empty outputs
+PASS: reference: matmul incompatible empty shapes
+PASS: reference: matmul shared input and output ownership
+PASS: reference: matmul 1536 deterministic cases against double oracle
+PASS: ikj: matmul 144 benchmark and long-reduction oracle cases
+PASS: ikj: matmul square
+PASS: ikj: matmul rectangular
+PASS: ikj: matmul incompatible shapes
+PASS: ikj: matmul_zero_inner_dimension
+PASS: ikj: matmul rectangular output
+PASS: ikj: matmul scalar
+PASS: ikj: matmul dot product
+PASS: ikj: matmul outer product
+PASS: ikj: matmul mixed signs, fractions, and cancellation
+PASS: ikj: matmul left and right identity
+PASS: ikj: matmul zero operands
+PASS: ikj: matmul empty outputs
+PASS: ikj: matmul incompatible empty shapes
+PASS: ikj: matmul shared input and output ownership
+PASS: ikj: matmul 1536 deterministic cases against double oracle
+PASS: blocked_8_32_64: matmul 144 benchmark and long-reduction oracle cases
+PASS: blocked_8_32_64: matmul square
+PASS: blocked_8_32_64: matmul rectangular
+PASS: blocked_8_32_64: matmul incompatible shapes
+PASS: blocked_8_32_64: matmul_zero_inner_dimension
+PASS: blocked_8_32_64: matmul rectangular output
+PASS: blocked_8_32_64: matmul scalar
+PASS: blocked_8_32_64: matmul dot product
+PASS: blocked_8_32_64: matmul outer product
+PASS: blocked_8_32_64: matmul mixed signs, fractions, and cancellation
+PASS: blocked_8_32_64: matmul left and right identity
+PASS: blocked_8_32_64: matmul zero operands
+PASS: blocked_8_32_64: matmul empty outputs
+PASS: blocked_8_32_64: matmul incompatible empty shapes
+PASS: blocked_8_32_64: matmul shared input and output ownership
+PASS: blocked_8_32_64: matmul 1536 deterministic cases against double oracle
+PASS: blocked_16_32_64: matmul 144 benchmark and long-reduction oracle cases
+PASS: blocked_16_32_64: matmul square
+PASS: blocked_16_32_64: matmul rectangular
+PASS: blocked_16_32_64: matmul incompatible shapes
+PASS: blocked_16_32_64: matmul_zero_inner_dimension
+PASS: blocked_16_32_64: matmul rectangular output
+PASS: blocked_16_32_64: matmul scalar
+PASS: blocked_16_32_64: matmul dot product
+PASS: blocked_16_32_64: matmul outer product
+PASS: blocked_16_32_64: matmul mixed signs, fractions, and cancellation
+PASS: blocked_16_32_64: matmul left and right identity
+PASS: blocked_16_32_64: matmul zero operands
+PASS: blocked_16_32_64: matmul empty outputs
+PASS: blocked_16_32_64: matmul incompatible empty shapes
+PASS: blocked_16_32_64: matmul shared input and output ownership
+PASS: blocked_16_32_64: matmul 1536 deterministic cases against double oracle
+PASS: blocked_16_64_64: matmul 144 benchmark and long-reduction oracle cases
+PASS: blocked_16_64_64: matmul square
+PASS: blocked_16_64_64: matmul rectangular
+PASS: blocked_16_64_64: matmul incompatible shapes
+PASS: blocked_16_64_64: matmul_zero_inner_dimension
+PASS: blocked_16_64_64: matmul rectangular output
+PASS: blocked_16_64_64: matmul scalar
+PASS: blocked_16_64_64: matmul dot product
+PASS: blocked_16_64_64: matmul outer product
+PASS: blocked_16_64_64: matmul mixed signs, fractions, and cancellation
+PASS: blocked_16_64_64: matmul left and right identity
+PASS: blocked_16_64_64: matmul zero operands
+PASS: blocked_16_64_64: matmul empty outputs
+PASS: blocked_16_64_64: matmul incompatible empty shapes
+PASS: blocked_16_64_64: matmul shared input and output ownership
+PASS: blocked_16_64_64: matmul 1536 deterministic cases against double oracle
+0 failed test(s)
+<end of output>
+Test time = 156.06 sec
+----------------------------------------------------------
+Test Passed.
+"matrix" end time: Oct 07 15:49 PDT
+"matrix" time elapsed: 00:02:36
+----------------------------------------------------------
+
+3/3 Testing: matrix_copy_assignment
+3/3 Test: matrix_copy_assignment
+Command: "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/step8-sanitize/matrix_copy_assignment_tests"
+Directory: /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/step8-sanitize
+"matrix_copy_assignment" start time: Oct 07 15:49 PDT
+Output:
+----------------------------------------------------------
+PASS: copy assignment preserves state on allocation failure and can be retried
+<end of output>
+Test time =   0.44 sec
+----------------------------------------------------------
+Test Passed.
+"matrix_copy_assignment" end time: Oct 07 15:49 PDT
+"matrix_copy_assignment" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 07 15:49 PDT

@@ -1,0 +1,11 @@
+-- Google Benchmark version: v1.9.4, normalized to 1.9.4
+-- Enabling additional flags: -DINCLUDE_DIRECTORIES=/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include
+-- Performing Test HAVE_THREAD_SAFETY_ATTRIBUTES -- success
+-- Performing Test HAVE_STD_REGEX -- success
+-- Performing Test HAVE_GNU_POSIX_REGEX -- failed to compile
+-- Performing Test HAVE_POSIX_REGEX -- success
+-- Performing Test HAVE_STEADY_CLOCK -- success
+-- Performing Test HAVE_PTHREAD_AFFINITY -- failed to compile
+-- Configuring done (0.5s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release

@@ -1,0 +1,750 @@
+diff --git a/BENCHMARKING.md b/BENCHMARKING.md
+index 408abfe..c7dd183 100644
+--- a/BENCHMARKING.md
++++ b/BENCHMARKING.md
+@@ -353,3 +353,40 @@ Each expanded capture retains 480 individual measurements. The summarizer adds
+ `storage_bytes = 4*(M*K + K*N + M*N)` and `reference_B_stride_bytes = 4*N`
+ while retaining CPU/real timing and variability. Storage is an allocation footprint,
+ not an assertion that every byte is active in a particular cache.
++
++## Step 8 cache-blocking comparison
++
++The `blocking` suite measures the 15 preselected shapes in [CACHE_BLOCKING.md](CACHE_BLOCKING.md)
++for reference, ikj, and three blocked configurations. The wrappers call one runtime
++configurable kernel; tile setup and validation remain inside allocation-inclusive timing.
++There is no packing or extra tile-buffer allocation. Each full capture contains
++750 measurements at ten repetitions. Existing suites continue to select only the
++two historical implementations.
++
++```sh
++python3 scripts/run_benchmarks.py --suite blocking \
++  --warmup 1 --min-time 1 --repetitions 10 --prevent-idle-sleep \
++  --implementation-order reference-first --notes "Actual observed conditions"
++python3 scripts/run_benchmarks.py --suite blocking \
++  --warmup 1 --min-time 1 --repetitions 10 --prevent-idle-sleep \
++  --implementation-order ikj-first --notes "Actual observed conditions"
++```
++
++For this suite `ikj-first` reverses the entire default sequence, so the second
++capture starts with blocked_16_64_64 and ends with reference. Alternatively supply
++all five keys in an explicit comma-separated order. Invalid/duplicate/incomplete
++orders are rejected. The saved implementation order is authoritative.
++
++Implementation prefixes and tile dimensions are saved in the protocol. Validation
++and summaries read each capture's implementation and shape manifests, preserving
++Step 7 schema-v2 compatibility independently of the current candidate registry.
++Summaries include reference/variant and ikj/variant ratios, with values above one
++favoring the variant; the old reference/ikj CSV field remains for the Step 7 plot.
++
++```sh
++python3 scripts/summarize_benchmarks.py RUN_A RUN_B --csv /tmp/step8.csv
++```
++
++Retain raw repetitions, source snapshots, and all candidate outcomes. Avoid source
++edits or concurrent builds during collection: the collector rejects source changes
++and concurrent CPU work would interfere with the experiment.
+diff --git a/TESTING.md b/TESTING.md
+index d9b61b7..dd5d377 100644
+--- a/TESTING.md
++++ b/TESTING.md
+@@ -75,3 +75,22 @@ two implementations sharing shapes, incomplete comparisons, missing
+ shapes/repetitions, duplicate indices, incorrect settings, invalid measurements,
+ and exclusion of aggregate rows from repetition counts. The Release benchmark
+ build passed all four CTest targets before each Step 7 capture.
++
++## Step 8 coverage
++
++`matmul_blocked` runs the shared contract tests and 1,536 small deterministic
++oracle cases for each of (BM,BK,BN) = (8,32,64), (16,32,64), (16,64,64).
++The large oracle suite now includes 512-square and (129,257,131): 36 shapes,
++four patterns each, for 144 cases per kernel across all five kernels. This
++covers every Step 8 benchmark shape with the existing error bound unchanged.
++
++For each candidate, all 64 combinations of dimensions B-1, B, B+1, and 2*B+1
++are checked with four patterns (768 additional cases). Three further configurations
++(unit tiles, odd tiles, SIZE_MAX tiles) add 12 cases. Validation checks cover zero
++tile dimensions, huge empty shapes, and output-size overflow. Odd tile reductions
++and cancellation fixtures exercise accumulation across reduction boundaries.
++
++Use the commands above with `step8` in place of `step7` for Debug/Release/sanitizer
++builds. The Release benchmark build also runs the Python collector/summarizer
++regressions: multiple candidates, missing candidates, execution orders, saved
++implementation/tile manifests, integrity failures, and historical capture support.
+diff --git a/benchmarks/matmul_bench.cpp b/benchmarks/matmul_bench.cpp
+index 613f50c..66f5d69 100644
+--- a/benchmarks/matmul_bench.cpp
++++ b/benchmarks/matmul_bench.cpp
+@@ -53,6 +53,8 @@ static void MatmulShapes(benchmark::internal::Benchmark* benchmark) {
+   ->Args({32, 32, 32})
+   ->Args({128, 128, 128})
+   ->Args({256, 256, 256})
++  ->Args({512, 512, 512})
++  ->Args({129, 257, 131})
+   ->Args({63,65,67})
+   ->Args({1, 256, 256})
+   ->Args({256,256,1})
+@@ -70,3 +72,22 @@ static void MatmulShapes(benchmark::internal::Benchmark* benchmark) {
+ 
+ BENCHMARK(BM_MatmulReferenceAllocationIncluded)->Apply(MatmulShapes);
+ BENCHMARK(BM_MatmulIkjAllocationIncluded)->Apply(MatmulShapes);
++
++// Wrappers select configuration outside the kernel without indirect dispatch.
++template <std::size_t BM, std::size_t BK, std::size_t BN>
++static inference::Matrix Blocked(const inference::Matrix& a, const inference::Matrix& b) {
++  return inference::matmul_blocked(a, b, {BM, BK, BN});
++}
++
++static void BM_MatmulBlocked8x32x64AllocationIncluded(benchmark::State& state) {
++  MatmulAllocationIncluded<Blocked<8, 32, 64>>(state);
++}
++static void BM_MatmulBlocked16x32x64AllocationIncluded(benchmark::State& state) {
++  MatmulAllocationIncluded<Blocked<16, 32, 64>>(state);
++}
++static void BM_MatmulBlocked16x64x64AllocationIncluded(benchmark::State& state) {
++  MatmulAllocationIncluded<Blocked<16, 64, 64>>(state);
++}
++BENCHMARK(BM_MatmulBlocked8x32x64AllocationIncluded)->Apply(MatmulShapes);
++BENCHMARK(BM_MatmulBlocked16x32x64AllocationIncluded)->Apply(MatmulShapes);
++BENCHMARK(BM_MatmulBlocked16x64x64AllocationIncluded)->Apply(MatmulShapes);
+diff --git a/include/inference/matrix.hpp b/include/inference/matrix.hpp
+index 6023003..6c5557c 100644
+--- a/include/inference/matrix.hpp
++++ b/include/inference/matrix.hpp
+@@ -39,6 +39,16 @@ private:
+ Matrix matmul_reference(const Matrix& a, const Matrix& b);
+ 
+ Matrix matmul_ikj(const Matrix& a, const Matrix& b);
++
++struct MatmulTiles {
++    std::size_t bm;
++    std::size_t bk;
++    std::size_t bn;
++};
++
++// Fresh zero-initialized output; inputs may be the same Matrix.
++// Rejects incompatible shapes and zero tile dimensions, including empty inputs.
++Matrix matmul_blocked(const Matrix& a, const Matrix& b, MatmulTiles tiles);
+ }
+ 
+ #endif // MATRIX_HPP
+diff --git a/scripts/run_benchmarks.py b/scripts/run_benchmarks.py
+index bc18556..879ce9c 100644
+--- a/scripts/run_benchmarks.py
++++ b/scripts/run_benchmarks.py
+@@ -19,6 +19,11 @@ IMPLEMENTATIONS = {
+     "reference": "BM_MatmulReferenceAllocationIncluded",
+     "ikj": "BM_MatmulIkjAllocationIncluded",
+ }
++TILES = {"blocked_8_32_64": (8, 32, 64), "blocked_16_32_64": (16, 32, 64),
++         "blocked_16_64_64": (16, 64, 64)}
++BLOCKING_IMPLEMENTATIONS = {**IMPLEMENTATIONS, **{
++    key: f"BM_MatmulBlocked{bm}x{bk}x{bn}AllocationIncluded"
++    for key, (bm, bk, bn) in TILES.items()}}
+ SHAPES = ((1, 1, 1), (32, 32, 32), (128, 128, 128), (256, 256, 256),
+           (63, 65, 67), (1, 256, 256), (256, 256, 1))
+ 
+@@ -27,13 +32,43 @@ WIDTHS = (1, 4, 16, 17, 64, 255, 256, 257, 512, 1024)
+ MEMORY_ACCESS_SHAPES = tuple(shape for size in VECTOR_SIZES
+                              for shape in ((1, size, size), (size, size, 1))) + tuple(
+                                  (32, 256, width) for width in WIDTHS)
+-SUITES = {"baseline": SHAPES, "memory-access": MEMORY_ACCESS_SHAPES}
++BLOCKING_SHAPES = ((32, 32, 32), (128, 128, 128), (256, 256, 256), (512, 512, 512),
++                   (63, 65, 67), (129, 257, 131)) + tuple(
++                       (32, 256, n) for n in (64, 255, 256, 257, 512, 1024)) + (
++                       (1, 1, 1), (1, 256, 256), (256, 256, 1))
++SUITES = {"baseline": SHAPES, "memory-access": MEMORY_ACCESS_SHAPES,
++          "blocking": BLOCKING_SHAPES}
+ 
+ 
+-def validate_results(rows, repetitions, implementations=None, shapes=None):
++def validate_implementation_manifest(manifest):
++    if (not isinstance(manifest, dict) or not manifest
++            or any(not isinstance(k, str) or not k or not isinstance(v, str)
++                   or not re.fullmatch(r"[A-Za-z0-9_]+", v) for k, v in manifest.items())
++            or len(set(manifest.values())) != len(manifest)):
++        raise RuntimeError("Invalid implementation manifest")
++    return manifest
++
++
++def ordered_implementations(manifest, order):
++    if order in ("reference-first", "ikj-first"):
++        keys = list(manifest)
++        if order == "ikj-first":
++            keys.reverse()
++    else:
++        keys = order.split(",")
++    if len(keys) != len(set(keys)) or set(keys) != set(manifest):
++        raise ValueError("Implementation order must list every selected implementation exactly once")
++    return keys
++
++
++def validate_results(rows, repetitions, implementations=None, shapes=None, manifest=None):
+     """Reject incomplete comparisons, duplicate repetitions, and invalid timings."""
+-    implementations = tuple(IMPLEMENTATIONS if implementations is None else implementations)
+-    names = {IMPLEMENTATIONS[key]: key for key in implementations}
++    manifest = validate_implementation_manifest(IMPLEMENTATIONS if manifest is None else manifest)
++    implementations = tuple(manifest if implementations is None else implementations)
++    if (not implementations or len(set(implementations)) != len(implementations)
++            or any(key not in manifest for key in implementations)):
++        raise RuntimeError("Invalid selected implementations")
++    names = {manifest[key]: key for key in implementations}
+     shapes = tuple(tuple(shape) for shape in (SHAPES if shapes is None else shapes))
+     if (not shapes or any(len(shape) != 3 or any(type(x) is not int or x <= 0 for x in shape)
+                           for shape in shapes) or len(set(shapes)) != len(shapes)):
+@@ -128,8 +163,8 @@ def main():
+     parser.add_argument("--warmup", type=positive_seconds, default=0.5)
+     parser.add_argument("--min-time", type=positive_seconds, default=1.0)
+     parser.add_argument("--repetitions", type=int, default=5)
+-    parser.add_argument("--implementation-order", choices=("reference-first", "ikj-first"),
+-                        default="reference-first")
++    parser.add_argument("--implementation-order", default="reference-first",
++                        help="reference-first, ikj-first (reverse suite order), or comma-separated full order")
+     parser.add_argument("--prevent-idle-sleep", action="store_true",
+                         help="Hold a temporary caffeinate -i assertion during each benchmark process")
+     parser.add_argument("--notes", default="User run conditions not reported")
+@@ -140,9 +175,11 @@ def main():
+         parser.error("This metadata collector currently supports macOS")
+ 
+     shapes = SUITES[args.suite]
+-    implementation_order = ["reference", "ikj"]
+-    if args.implementation_order == "ikj-first":
+-        implementation_order.reverse()
++    manifest = BLOCKING_IMPLEMENTATIONS if args.suite == "blocking" else IMPLEMENTATIONS
++    try:
++        implementation_order = ordered_implementations(manifest, args.implementation_order)
++    except ValueError as error:
++        parser.error(str(error))
+     build = args.build_dir.resolve()
+     commit = capture(["git", "rev-parse", "HEAD"])
+     status = capture(["git", "status", "--porcelain=v1", "--untracked-files=all"])
+@@ -172,7 +209,8 @@ def main():
+             "warmup_seconds": args.warmup,
+             "minimum_measurement_seconds": args.min_time,
+             "repetitions": args.repetitions,
+-            "implementations": IMPLEMENTATIONS,
++            "implementations": manifest,
++            "tiles_BM_BK_BN": {key: list(TILES[key]) for key in manifest if key in TILES},
+             "shapes_M_K_N": [list(shape) for shape in shapes],
+             "suite": args.suite,
+             "implementation_order": implementation_order,
+@@ -252,7 +290,7 @@ def main():
+             metadata["implementation_captures"].append(record)
+             launcher = ["/usr/bin/caffeinate", "-i"] if args.prevent_idle_sleep else []
+             shape_pattern = "|".join(f"M:{m}/K:{k}/N:{n}" for m, k, n in shapes)
+-            benchmark_filter = f"^{IMPLEMENTATIONS[implementation]}/({shape_pattern})$"
++            benchmark_filter = f"^{manifest[implementation]}/({shape_pattern})$"
+             run([*launcher, str(binary), f"--benchmark_filter={benchmark_filter}",
+                  f"--benchmark_min_warmup_time={args.warmup}",
+                  f"--benchmark_min_time={args.min_time}s", f"--benchmark_repetitions={args.repetitions}",
+@@ -263,14 +301,14 @@ def main():
+             record["finished_at_utc"] = now()
+             record["machine_after"] = machine_state()
+             results = json.loads(result_path.read_text())
+-            record.update(validate_results(results["benchmarks"], args.repetitions, [implementation], shapes))
++            record.update(validate_results(results["benchmarks"], args.repetitions, [implementation], shapes, manifest=manifest))
+             record["results_file"] = result_path.name
+             record["results_sha256"] = digest(result_path)
+             combined["contexts"][implementation] = results["context"]
+             combined["benchmarks"].extend(results["benchmarks"])
+             save_metadata()
+         metadata["machine_after"] = machine_state()
+-        validation = validate_results(combined["benchmarks"], args.repetitions, shapes=shapes)
++        validation = validate_results(combined["benchmarks"], args.repetitions, shapes=shapes, manifest=manifest)
+         metadata["measurement_rows"] = validation["measurement_rows"]
+         metadata["protocol"]["case_order"] = validation["case_order"]
+         (output / "results.json").write_text(json.dumps(combined, indent=2) + "\n")
+diff --git a/scripts/summarize_benchmarks.py b/scripts/summarize_benchmarks.py
+index 32a284c..149fe87 100644
+--- a/scripts/summarize_benchmarks.py
++++ b/scripts/summarize_benchmarks.py
+@@ -7,7 +7,7 @@ import math
+ from pathlib import Path
+ import statistics
+ 
+-from run_benchmarks import IMPLEMENTATIONS, digest, validate_results
++from run_benchmarks import digest, validate_results, validate_implementation_manifest
+ 
+ 
+ def summarize(folder):
+@@ -20,6 +20,18 @@ def summarize(folder):
+         if digest(folder / "source" / name) != expected:
+             raise ValueError(f"Source snapshot hash mismatch: {name}")
+     combined = json.loads((folder / "results.json").read_text())
++    manifest = validate_implementation_manifest(metadata["protocol"]["implementations"])
++    tiles = metadata["protocol"].get("tiles_BM_BK_BN", {})
++    if (not isinstance(tiles, dict) or any(key not in manifest for key in tiles)
++            or any(not isinstance(value, list) or len(value) != 3
++                   or any(type(x) is not int or x <= 0 for x in value)
++                   for value in tiles.values())):
++        raise ValueError("Invalid tile manifest")
++    captures = [item["implementation"] for item in metadata["implementation_captures"]]
++    if len(captures) != len(set(captures)) or set(captures) != set(manifest):
++        raise ValueError("Capture implementations differ from manifest")
++    if captures != metadata["protocol"]["implementation_order"]:
++        raise ValueError("Capture order differs from protocol")
+     raw_rows = []
+     for capture in metadata["implementation_captures"]:
+         path = folder / capture["results_file"]
+@@ -28,18 +40,21 @@ def summarize(folder):
+         raw = json.loads(path.read_text())
+         if raw["context"] != combined["contexts"][capture["implementation"]]:
+             raise ValueError("Combined context differs from raw context")
++        validate_results(raw["benchmarks"], metadata["protocol"]["repetitions"],
++                         [capture["implementation"]], metadata["protocol"]["shapes_M_K_N"],
++                         manifest=manifest)
+         raw_rows.extend(raw["benchmarks"])
+     if raw_rows != combined["benchmarks"]:
+         raise ValueError("Combined result differs from raw results")
+     repetitions = metadata["protocol"]["repetitions"]
+     shapes = metadata["protocol"]["shapes_M_K_N"]
+-    validation = validate_results(raw_rows, repetitions, shapes=shapes)
++    validation = validate_results(raw_rows, repetitions, shapes=shapes, manifest=manifest)
+     if validation["measurement_rows"] != metadata["measurement_rows"]:
+         raise ValueError("Metadata measurement count differs from raw results")
+     summaries = []
+     for m, k, n in shapes:
+         pair = []
+-        for implementation, prefix in IMPLEMENTATIONS.items():
++        for implementation, prefix in manifest.items():
+             name = f"{prefix}/M:{m}/K:{k}/N:{n}"
+             rows = [r for r in raw_rows if r.get("run_type") == "iteration" and r["name"] == name]
+             times = [r["cpu_time"] for r in rows]
+@@ -67,9 +82,17 @@ def summarize(folder):
+                 "median_real_us": statistics.median(r["real_time"] for r in rows),
+                 "max_real_cpu_ratio": max(r["real_time"] / r["cpu_time"] for r in rows),
+             })
+-        speedup = pair[0]["median_cpu_us"] / pair[1]["median_cpu_us"]
++        by_name = {row["implementation"]: row for row in pair}
+         for row in pair:
+-            row["reference_over_ikj_cpu_speedup"] = speedup
++            # Keep the historical column for the Step 7 chart.
++            row["reference_over_ikj_cpu_speedup"] = (by_name["reference"]["median_cpu_us"]
++                                                        / by_name["ikj"]["median_cpu_us"])
++            row["reference_over_variant_cpu_speedup"] = (by_name["reference"]["median_cpu_us"]
++                                                           / row["median_cpu_us"])
++            row["ikj_over_variant_cpu_speedup"] = (by_name["ikj"]["median_cpu_us"]
++                                                     / row["median_cpu_us"])
++            tile = metadata["protocol"].get("tiles_BM_BK_BN", {}).get(row["implementation"])
++            row["tiles_BM_BK_BN"] = "x".join(map(str, tile)) if tile else ""
+         summaries.extend(pair)
+     return summaries
+ 
+@@ -84,14 +107,14 @@ def main():
+         rows = summarize(folder)
+         all_rows.extend(rows)
+         print(f"\n### {folder.name}\n")
+-        print("| (M,K,N) | Reference CPU µs | ikj CPU µs | Ref CV % | ikj CV % | Ref GFLOP/s | ikj GFLOP/s | Speedup |")
+-        print("|---|---:|---:|---:|---:|---:|---:|---:|")
+-        for reference, ikj in zip(rows[::2], rows[1::2]):
+-            shape = f"({reference['M']},{reference['K']},{reference['N']})"
+-            print(f"| {shape} | {reference['median_cpu_us']:.6f} | {ikj['median_cpu_us']:.6f} "
+-                  f"| {reference['cpu_cv_percent']:.2f} | {ikj['cpu_cv_percent']:.2f} "
+-                  f"| {reference['median_gflops']:.3f} | {ikj['median_gflops']:.3f} "
+-                  f"| {reference['reference_over_ikj_cpu_speedup']:.3f}× |")
++        print("| (M,K,N) | Implementation | CPU µs | CV % | GFLOP/s | Reference / variant | ikj / variant |")
++        print("|---|---|---:|---:|---:|---:|---:|")
++        for row in rows:
++            shape = f"({row['M']},{row['K']},{row['N']})"
++            print(f"| {shape} | {row['implementation']} | {row['median_cpu_us']:.6f} "
++                  f"| {row['cpu_cv_percent']:.2f} | {row['median_gflops']:.3f} "
++                  f"| {row['reference_over_variant_cpu_speedup']:.3f}× "
++                  f"| {row['ikj_over_variant_cpu_speedup']:.3f}× |")
+     with args.csv.open("w", newline="") as output:
+         writer = csv.DictWriter(output, fieldnames=list(all_rows[0]))
+         writer.writeheader()
+diff --git a/src/matrix.cpp b/src/matrix.cpp
+index 6509a6f..07b3828 100644
+--- a/src/matrix.cpp
++++ b/src/matrix.cpp
+@@ -1,4 +1,5 @@
+ #include "inference/matrix.hpp"
++#include <algorithm>
+ #include <stdexcept>
+ #include <utility>
+ 
+@@ -106,4 +107,39 @@ Matrix matmul_ikj(const Matrix& a, const Matrix& b){
+         }
+     return result;
+ }
++
++Matrix matmul_blocked(const Matrix& a, const Matrix& b, MatmulTiles tiles) {
++    if (a.cols() != b.rows()) {
++        throw std::invalid_argument("Columns of first matrix must match rows of second matrix");
++    }
++    if (tiles.bm == 0 || tiles.bk == 0 || tiles.bn == 0) {
++        throw std::invalid_argument("Tile dimensions must be positive");
++    }
++    const auto m = a.rows(), k_size = a.cols(), n = b.cols();
++    Matrix result(m, n);
++    if (m == 0 || n == 0 || k_size == 0) {
++        return result;
++    }
++    for (std::size_t ii = 0; ii < m; ) {
++        const auto i_end = ii + std::min(tiles.bm, m - ii);
++        for (std::size_t jj = 0; jj < n; ) {
++            const auto j_end = jj + std::min(tiles.bn, n - jj);
++            for (std::size_t kk = 0; kk < k_size; ) {
++                const auto k_end = kk + std::min(tiles.bk, k_size - kk);
++                for (std::size_t i = ii; i < i_end; ++i) {
++                    for (std::size_t k = kk; k < k_end; ++k) {
++                        const float a_value = a(i, k);
++                        for (std::size_t j = jj; j < j_end; ++j) {
++                            result(i, j) += a_value * b(k, j);
++                        }
++                    }
++                }
++                kk = k_end;
++            }
++            jj = j_end;
++        }
++        ii = i_end;
++    }
++    return result;
++}
+ }
+diff --git a/tests/benchmark_results_tests.py b/tests/benchmark_results_tests.py
+index 3703799..2d45612 100644
+--- a/tests/benchmark_results_tests.py
++++ b/tests/benchmark_results_tests.py
+@@ -1,12 +1,17 @@
+ """Collector regression tests; no benchmark execution or macOS probes required."""
+ 
+ import copy
++import json
++import tempfile
++from unittest.mock import patch
+ from pathlib import Path
+ import sys
+ import unittest
+ 
+ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+-from run_benchmarks import IMPLEMENTATIONS, SHAPES, MEMORY_ACCESS_SHAPES, validate_results
++from run_benchmarks import IMPLEMENTATIONS, SHAPES, MEMORY_ACCESS_SHAPES, validate_results, BLOCKING_IMPLEMENTATIONS, BLOCKING_SHAPES, ordered_implementations, digest
++
++from summarize_benchmarks import summarize
+ 
+ 
+ class ResultValidationTests(unittest.TestCase):
+@@ -83,6 +88,71 @@ class ResultValidationTests(unittest.TestCase):
+             with self.subTest(shapes=shapes), self.assertRaisesRegex(RuntimeError, "Expected shapes"):
+                 validate_results(self.rows, 2, shapes=shapes)
+ 
++    def test_blocking_manifest_and_missing_candidate(self):
++        rows = [dict(self.rows[0], name=f"{prefix}/M:{m}/K:{k}/N:{n}", repetition_index=i)
++                for prefix in BLOCKING_IMPLEMENTATIONS.values()
++                for m, k, n in BLOCKING_SHAPES for i in range(2)]
++        result = validate_results(rows, 2, shapes=BLOCKING_SHAPES, manifest=BLOCKING_IMPLEMENTATIONS)
++        self.assertEqual(result["measurement_rows"], 150)
++        with self.assertRaisesRegex(RuntimeError, "Missing benchmark cases"):
++            validate_results(rows[:-30], 2, shapes=BLOCKING_SHAPES, manifest=BLOCKING_IMPLEMENTATIONS)
++        for manifest in ({}, {"a": "Same", "b": "Same"}, {"a": "bad/name"}):
++            with self.assertRaisesRegex(RuntimeError, "implementation manifest"):
++                validate_results(rows, 2, manifest=manifest)
++
++    def test_execution_order(self):
++        keys = list(BLOCKING_IMPLEMENTATIONS)
++        self.assertEqual(ordered_implementations(BLOCKING_IMPLEMENTATIONS, "ikj-first"), keys[::-1])
++        self.assertEqual(ordered_implementations(BLOCKING_IMPLEMENTATIONS, ",".join(keys[2:] + keys[:2])), keys[2:] + keys[:2])
++        for order in ("reference", "reference,reference", "unknown"):
++            with self.assertRaises(ValueError):
++                ordered_implementations(BLOCKING_IMPLEMENTATIONS, order)
++
++    def test_saved_manifest_summary_and_integrity(self):
++        # A future/renamed candidate proves summaries do not use today's registry.
++        manifest = {**IMPLEMENTATIONS, "future_tile": "FutureKernel"}
++        with tempfile.TemporaryDirectory() as directory:
++            folder = Path(directory)
++            raw_rows, captures, contexts = [], [], {}
++            for index, (key, prefix) in enumerate(manifest.items()):
++                name = f"{prefix}/M:1/K:1/N:1"
++                cpu = float(index + 1)
++                rows = [dict(self.rows[0], name=name, repetition_index=i,
++                             cpu_time=cpu, GFLOPS=2 / (1000 * cpu)) for i in range(2)]
++                rows += [dict(run_type="aggregate", run_name=name, aggregate_name="median", cpu_time=cpu),
++                         dict(run_type="aggregate", run_name=name, aggregate_name="cv", cpu_time=0)]
++                path = folder / f"{key}.json"
++                path.write_text(json.dumps({"context": {}, "benchmarks": rows}))
++                captures.append({"implementation": key, "results_file": path.name, "results_sha256": digest(path)})
++                contexts[key] = {}
++                raw_rows.extend(rows)
++            result_path = folder / "results.json"
++            result_path.write_text(json.dumps({"contexts": contexts, "benchmarks": raw_rows}))
++            metadata = {"schema_version": 2, "status": "complete", "source_sha256": {},
++                        "results_sha256": digest(result_path), "measurement_rows": 6,
++                        "implementation_captures": captures,
++                        "protocol": {"implementations": manifest, "implementation_order": list(manifest),
++                                     "repetitions": 2, "shapes_M_K_N": [[1, 1, 1]],
++                                     "tiles_BM_BK_BN": {"future_tile": [3, 5, 7]}}}
++            (folder / "metadata.json").write_text(json.dumps(metadata))
++            rows = summarize(folder)
++            self.assertEqual(rows[-1]["tiles_BM_BK_BN"], "3x5x7")
++            self.assertAlmostEqual(rows[-1]["ikj_over_variant_cpu_speedup"], 2 / 3)
++            metadata["protocol"]["tiles_BM_BK_BN"]["future_tile"] = [0, 5, 7]
++            (folder / "metadata.json").write_text(json.dumps(metadata))
++            with self.assertRaisesRegex(ValueError, "tile manifest"):
++                summarize(folder)
++            result_path.write_text("tampered")
++            with self.assertRaisesRegex(ValueError, "hash mismatch"):
++                summarize(folder)
++
++    def test_historical_capture_survives_registry_extension(self):
++        folder = Path(__file__).resolve().parents[1] / "benchmark-results/curated/20260922T174459.417805Z-4e6663560d49"
++        with patch("run_benchmarks.IMPLEMENTATIONS", BLOCKING_IMPLEMENTATIONS):
++            rows = summarize(folder)
++        self.assertEqual(len(rows), 48)
++        self.assertEqual({row["implementation"] for row in rows}, {"reference", "ikj"})
++
+ 
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/tests/matrix_tests.cpp b/tests/matrix_tests.cpp
+index 5a517b5..d2c49a1 100644
+--- a/tests/matrix_tests.cpp
++++ b/tests/matrix_tests.cpp
+@@ -655,86 +655,150 @@ void dot_error_bound_checks() {
+         "Error bound accepted NaN");
+ }
+ 
++struct Shape { std::size_t m, k, n; };
++
++template <typename Multiply>
++void check_oracle_shape(Multiply multiply, Shape shape) {
++    const auto [m, k, n] = shape;
++    // Two random fixtures, exact benchmark inputs, and cancellation-heavy
++    // binary fractions. The latter sum to zero for even K and one residual
++    // product for odd K, so relative-only tolerances would be inappropriate.
++    for (unsigned pattern = 0; pattern < 4; ++pattern) {
++        try {
++            const unsigned seed = pattern == 0 ? 17u : 20260912u;
++            std::mt19937 random(seed);
++            const auto next_value = [&] {
++                return static_cast<float>(static_cast<int>(random() % 2001) - 1000)
++                       / 1000.0f;
++            };
++            std::vector<std::vector<float>> a_rows(m, std::vector<float>(k));
++            std::vector<std::vector<float>> b_cols(n, std::vector<float>(k));
++            Matrix a(m, k), b(k, n);
++            for (std::size_t row = 0; row < m; ++row) {
++                for (std::size_t inner = 0; inner < k; ++inner) {
++                    float value = pattern < 2 ? next_value()
++                        : pattern == 2 ? static_cast<float>(static_cast<int>((row * k + inner) % 17) - 8) / 8.0f
++                        : static_cast<float>(row % 7 + 1) / 8.0f;
++                    a_rows[row][inner] = value;
++                    a.data()[row * k + inner] = value;
++                }
++            }
++            for (std::size_t col = 0; col < n; ++col) {
++                for (std::size_t inner = 0; inner < k; ++inner) {
++                    float value = pattern < 2 ? next_value()
++                        : pattern == 2 ? static_cast<float>(static_cast<int>((inner * n + col) % 13) - 6) / 6.0f
++                        : (inner % 2 == 0 ? 1.0f : -1.0f) * static_cast<float>(col % 7 + 1) / 8.0f;
++                    b_cols[col][inner] = value;
++                    b.data()[inner * n + col] = value;
++                }
++            }
++            const Matrix original_a = a, original_b = b;
++            const Matrix actual = multiply(a, b);
++            check(actual.rows() == m && actual.cols() == n, "Incorrect large-product shape");
++            check_matrix_close(a, original_a, 0.0, 0.0);
++            check_matrix_close(b, original_b, 0.0, 0.0);
++            for (std::size_t col = 0; col < n; ++col) {
++                for (std::size_t row = 0; row < m; ++row) {
++                    double expected = 0.0, sum_abs = 0.0;
++                    for (std::size_t inner = 0; inner < k; ++inner) {
++                        const double product = static_cast<double>(a_rows[row][inner])
++                                               * static_cast<double>(b_cols[col][inner]);
++                        expected += product;
++                        sum_abs += std::abs(product);
++                    }
++                    try {
++                        check_dot(actual(row, col), expected, sum_abs, k);
++                        if (pattern == 3) {
++                            const double exact = k % 2 == 0 ? 0.0
++                                : static_cast<double>(a_rows[row][0]) * b_cols[col][0];
++                            check(actual(row, col) == exact,
++                                  "Exactly representable cancellation fixture failed");
++                        }
++                    } catch (const std::exception& error) {
++                        std::ostringstream message;
++                        message << "element=(" << row << ',' << col << "): " << error.what();
++                        throw std::runtime_error(message.str());
++                    }
++                }
++            }
++        } catch (const std::exception& error) {
++            std::ostringstream message;
++            message << "M=" << m << ", K=" << k << ", N=" << n
++                    << ", pattern=" << pattern << ": " << error.what();
++            throw std::runtime_error(message.str());
++        }
++    }
++}
++
+ void matmul_large_reductions(Matmul multiply) {
+-    struct Shape { std::size_t m, k, n; };
+     // Every baseline and memory-access benchmark shape plus longer reductions.
+     // Keep the oracle independent of production indexing and traversal.
+     for (const auto [m, k, n] : {
+              Shape{1, 1, 1}, Shape{32, 32, 32}, Shape{128, 128, 128},
+-             Shape{256, 256, 256}, Shape{63, 65, 67}, Shape{1, 256, 256},
++             Shape{512, 512, 512}, Shape{129, 257, 131}, Shape{256, 256, 256}, Shape{63, 65, 67}, Shape{1, 256, 256},
+              Shape{256, 256, 1}, Shape{3, 255, 5}, Shape{5, 257, 3},
+              Shape{1, 1024, 17}, Shape{17, 1024, 1}, Shape{3, 1025, 7},
+              Shape{1, 64, 64}, Shape{64, 64, 1}, Shape{1, 128, 128}, Shape{128, 128, 1}, Shape{1, 255, 255}, Shape{255, 255, 1}, Shape{1, 257, 257}, Shape{257, 257, 1}, Shape{1, 512, 512}, Shape{512, 512, 1}, Shape{1, 1024, 1024}, Shape{1024, 1024, 1},
+              Shape{32, 256, 1}, Shape{32, 256, 4}, Shape{32, 256, 16}, Shape{32, 256, 17}, Shape{32, 256, 64}, Shape{32, 256, 255}, Shape{32, 256, 256}, Shape{32, 256, 257}, Shape{32, 256, 512}, Shape{32, 256, 1024}}) {
+-        // Two random fixtures, exact benchmark inputs, and cancellation-heavy
+-        // binary fractions. The latter sum to zero for even K and one residual
+-        // product for odd K, so relative-only tolerances would be inappropriate.
+-        for (unsigned pattern = 0; pattern < 4; ++pattern) {
+-            try {
+-                const unsigned seed = pattern == 0 ? 17u : 20260912u;
+-                std::mt19937 random(seed);
+-                const auto next_value = [&] {
+-                    return static_cast<float>(static_cast<int>(random() % 2001) - 1000)
+-                           / 1000.0f;
+-                };
+-                std::vector<std::vector<float>> a_rows(m, std::vector<float>(k));
+-                std::vector<std::vector<float>> b_cols(n, std::vector<float>(k));
+-                Matrix a(m, k), b(k, n);
+-                for (std::size_t row = 0; row < m; ++row) {
+-                    for (std::size_t inner = 0; inner < k; ++inner) {
+-                        float value = pattern < 2 ? next_value()
+-                            : pattern == 2 ? static_cast<float>(static_cast<int>((row * k + inner) % 17) - 8) / 8.0f
+-                            : static_cast<float>(row % 7 + 1) / 8.0f;
+-                        a_rows[row][inner] = value;
+-                        a.data()[row * k + inner] = value;
+-                    }
+-                }
+-                for (std::size_t col = 0; col < n; ++col) {
+-                    for (std::size_t inner = 0; inner < k; ++inner) {
+-                        float value = pattern < 2 ? next_value()
+-                            : pattern == 2 ? static_cast<float>(static_cast<int>((inner * n + col) % 13) - 6) / 6.0f
+-                            : (inner % 2 == 0 ? 1.0f : -1.0f) * static_cast<float>(col % 7 + 1) / 8.0f;
+-                        b_cols[col][inner] = value;
+-                        b.data()[inner * n + col] = value;
+-                    }
+-                }
+-                const Matrix original_a = a, original_b = b;
+-                const Matrix actual = multiply(a, b);
+-                check(actual.rows() == m && actual.cols() == n, "Incorrect large-product shape");
+-                check_matrix_close(a, original_a, 0.0, 0.0);
+-                check_matrix_close(b, original_b, 0.0, 0.0);
+-                for (std::size_t col = 0; col < n; ++col) {
+-                    for (std::size_t row = 0; row < m; ++row) {
+-                        double expected = 0.0, sum_abs = 0.0;
+-                        for (std::size_t inner = 0; inner < k; ++inner) {
+-                            const double product = static_cast<double>(a_rows[row][inner])
+-                                                   * static_cast<double>(b_cols[col][inner]);
+-                            expected += product;
+-                            sum_abs += std::abs(product);
+-                        }
+-                        try {
+-                            check_dot(actual(row, col), expected, sum_abs, k);
+-                            if (pattern == 3) {
+-                                const double exact = k % 2 == 0 ? 0.0
+-                                    : static_cast<double>(a_rows[row][0]) * b_cols[col][0];
+-                                check(actual(row, col) == exact,
+-                                      "Exactly representable cancellation fixture failed");
+-                            }
+-                        } catch (const std::exception& error) {
+-                            std::ostringstream message;
+-                            message << "element=(" << row << ',' << col << "): " << error.what();
+-                            throw std::runtime_error(message.str());
+-                        }
++        check_oracle_shape(multiply, {m, k, n});
++    }
++}
++
++template <std::size_t BM, std::size_t BK, std::size_t BN>
++Matrix blocked(const Matrix& a, const Matrix& b) {
++    return inference::matmul_blocked(a, b, {BM, BK, BN});
++}
++
++void blocked_boundaries() {
++    for (const auto tiles : {inference::MatmulTiles{8, 32, 64},
++                             inference::MatmulTiles{16, 32, 64},
++                             inference::MatmulTiles{16, 64, 64}}) {
++        const auto multiply = [tiles](const Matrix& a, const Matrix& b) {
++            return inference::matmul_blocked(a, b, tiles);
++        };
++        // Cross-product covers isolated and simultaneous boundary remainders.
++        for (auto m : {tiles.bm - 1, tiles.bm, tiles.bm + 1, 2 * tiles.bm + 1}) {
++            for (auto k : {tiles.bk - 1, tiles.bk, tiles.bk + 1, 2 * tiles.bk + 1}) {
++                for (auto n : {tiles.bn - 1, tiles.bn, tiles.bn + 1, 2 * tiles.bn + 1}) {
++                    try {
++                        check_oracle_shape(multiply, {m, k, n});
++                    } catch (const std::exception& error) {
++                        std::ostringstream message;
++                        message << "tiles=" << tiles.bm << ',' << tiles.bk << ',' << tiles.bn
++                                << ": " << error.what();
++                        throw std::runtime_error(message.str());
+                     }
+                 }
+-            } catch (const std::exception& error) {
+-                std::ostringstream message;
+-                message << "M=" << m << ", K=" << k << ", N=" << n
+-                        << ", pattern=" << pattern << ": " << error.what();
+-                throw std::runtime_error(message.str());
+             }
+         }
+     }
++    const auto largest = std::numeric_limits<std::size_t>::max();
++    for (const auto tiles : {inference::MatmulTiles{1, 1, 1},
++                             inference::MatmulTiles{3, 5, 7},
++                             inference::MatmulTiles{largest, largest, largest}}) {
++        check_oracle_shape([tiles](const Matrix& a, const Matrix& b) {
++            return inference::matmul_blocked(a, b, tiles);
++        }, {7, 11, 13});
++    }
++}
++
++void blocked_invalid_and_empty() {
++    for (const auto tiles : {inference::MatmulTiles{0, 32, 64},
++                             inference::MatmulTiles{8, 0, 64},
++                             inference::MatmulTiles{8, 32, 0}}) {
++        for (auto shape : {Shape{2, 3, 4}, Shape{0, 3, 4}, Shape{2, 0, 4}, Shape{2, 3, 0}}) {
++            expect_throw<std::invalid_argument>([&] {
++                (void)inference::matmul_blocked(Matrix(shape.m, shape.k),
++                                              Matrix(shape.k, shape.n), tiles);
++            }, "Zero tile size accepted");
++        }
++    }
++    const auto largest = std::numeric_limits<std::size_t>::max();
++    const auto result = inference::matmul_blocked(Matrix(largest, 0), Matrix(0, 0), {1, 1, 1});
++    check(result.rows() == largest && result.cols() == 0, "Huge empty shape lost");
++    expect_throw<std::length_error>([&] {
++        (void)inference::matmul_blocked(Matrix(largest, 0), Matrix(0, 2), {1, 1, 1});
++    }, "Oversized output accepted");
+ }
+ 
+ } // namespace
+@@ -745,6 +809,8 @@ int main() {
+         void (*run)();
+     };
+     const Test tests[] = {
++        {"blocked tile boundaries", blocked_boundaries},
++        {"blocked invalid and empty", blocked_invalid_and_empty},
+         {"long-reduction error bound", dot_error_bound_checks},
+         {"construction and zero initialization", construction},
+         {"row-major storage and const/mutable access", row_major_storage},
+@@ -766,7 +832,7 @@ int main() {
+         void (*run)(Matmul);
+     };
+     const KernelTest kernel_tests[] = {
+-        {"matmul 136 benchmark and long-reduction oracle cases", matmul_large_reductions},
++        {"matmul 144 benchmark and long-reduction oracle cases", matmul_large_reductions},
+         {"matmul square", matmul_square},
+         {"matmul rectangular", matmul_rectangular},
+         {"matmul incompatible shapes", matmul_incompatible_shapes},
+@@ -799,7 +865,10 @@ int main() {
+     struct Implementation { const char* name; Matmul multiply; };
+     for (const auto& implementation : {
+              Implementation{"reference", inference::matmul_reference},
+-             Implementation{"ikj", inference::matmul_ikj}}) {
++             Implementation{"ikj", inference::matmul_ikj},
++             Implementation{"blocked_8_32_64", blocked<8, 32, 64>},
++             Implementation{"blocked_16_32_64", blocked<16, 32, 64>},
++             Implementation{"blocked_16_64_64", blocked<16, 64, 64>}}) {
+         for (const auto& test : kernel_tests) {
+             try {
+                 test.run(implementation.multiply);

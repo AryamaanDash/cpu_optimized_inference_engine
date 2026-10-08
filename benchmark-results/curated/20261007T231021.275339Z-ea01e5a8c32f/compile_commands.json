@@ -1,0 +1,152 @@
+[
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release",
+  "command": "/usr/bin/c++  -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/include -O3 -DNDEBUG -std=gnu++20 -arch arm64 -o CMakeFiles/inference.dir/src/matrix.cpp.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/src/matrix.cpp",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/src/matrix.cpp",
+  "output": "CMakeFiles/inference.dir/src/matrix.cpp.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release",
+  "command": "/usr/bin/c++   -O3 -DNDEBUG -std=gnu++20 -arch arm64 -o CMakeFiles/inference_demo.dir/src/main.cpp.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/src/main.cpp",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/src/main.cpp",
+  "output": "CMakeFiles/inference_demo.dir/src/main.cpp.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release",
+  "command": "/usr/bin/c++  -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/include -O3 -DNDEBUG -std=gnu++20 -arch arm64 -o CMakeFiles/matrix_tests.dir/tests/matrix_tests.cpp.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/tests/matrix_tests.cpp",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/tests/matrix_tests.cpp",
+  "output": "CMakeFiles/matrix_tests.dir/tests/matrix_tests.cpp.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release",
+  "command": "/usr/bin/c++  -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/include -O3 -DNDEBUG -std=gnu++20 -arch arm64 -o CMakeFiles/matrix_copy_assignment_tests.dir/tests/matrix_copy_assignment_tests.cpp.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/tests/matrix_copy_assignment_tests.cpp",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/tests/matrix_copy_assignment_tests.cpp",
+  "output": "CMakeFiles/matrix_copy_assignment_tests.dir/tests/matrix_copy_assignment_tests.cpp.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -O3 -DNDEBUG -std=gnu++20 -arch arm64 -o CMakeFiles/matmul_bench.dir/benchmarks/matmul_bench.cpp.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/benchmarks/matmul_bench.cpp",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/benchmarks/matmul_bench.cpp",
+  "output": "CMakeFiles/matmul_bench.dir/benchmarks/matmul_bench.cpp.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -DBENCHMARK_VERSION=\\\"v1.9.4\\\" -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/benchmark.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/benchmark.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/benchmark.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/benchmark.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/benchmark_api_internal.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/benchmark_api_internal.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/benchmark_api_internal.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/benchmark_api_internal.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/benchmark_name.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/benchmark_name.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/benchmark_name.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/benchmark_name.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/benchmark_register.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/benchmark_register.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/benchmark_register.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/benchmark_register.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/benchmark_runner.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/benchmark_runner.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/benchmark_runner.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/benchmark_runner.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/check.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/check.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/check.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/check.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/colorprint.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/colorprint.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/colorprint.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/colorprint.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/commandlineflags.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/commandlineflags.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/commandlineflags.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/commandlineflags.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/complexity.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/complexity.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/complexity.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/complexity.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/console_reporter.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/console_reporter.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/console_reporter.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/console_reporter.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/counter.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/counter.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/counter.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/counter.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/csv_reporter.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/csv_reporter.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/csv_reporter.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/csv_reporter.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/json_reporter.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/json_reporter.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/json_reporter.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/json_reporter.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/perf_counters.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/perf_counters.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/perf_counters.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/perf_counters.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/reporter.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/reporter.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/reporter.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/reporter.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/statistics.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/statistics.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/statistics.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/statistics.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/string_util.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/string_util.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/string_util.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/string_util.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/sysinfo.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/sysinfo.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/sysinfo.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/sysinfo.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark.dir/timers.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/timers.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/timers.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark.dir/timers.cc.o"
+},
+{
+  "directory": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-build/src",
+  "command": "/usr/bin/c++ -DBENCHMARK_STATIC_DEFINE -DHAVE_POSIX_REGEX -DHAVE_STD_REGEX -DHAVE_STEADY_CLOCK -DHAVE_THREAD_SAFETY_ATTRIBUTES -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/include -I/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src   -Wall  -Wextra  -Wshadow  -Wfloat-equal  -Wold-style-cast  -Wconversion  -Werror  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wno-deprecated  -Wstrict-aliasing  -Wthread-safety -O3 -DNDEBUG -std=c++17 -arch arm64 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/benchmark_main.dir/benchmark_main.cc.o -c /Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/benchmark_main.cc",
+  "file": "/Users/aryamaandash/GitHub/cpu_optimized_inference_engine/build/benchmark-release/_deps/googlebenchmark-src/src/benchmark_main.cc",
+  "output": "_deps/googlebenchmark-build/src/CMakeFiles/benchmark_main.dir/benchmark_main.cc.o"
+}
+]
