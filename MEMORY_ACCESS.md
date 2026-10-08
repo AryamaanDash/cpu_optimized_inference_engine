@@ -519,3 +519,10 @@ python3 scripts/summarize_benchmarks.py \
 MPLCONFIGDIR=/tmp/cpu-inference-matplotlib XDG_CACHE_HOME=/tmp/cpu-inference-cache \
   python3 scripts/plot_memory_access.py /tmp/step7-sweeps.csv /tmp/step7-sweeps
 ```
+
+## Step 8 follow-up
+
+Step 8 is now complete; [CACHE_BLOCKING.md](CACHE_BLOCKING.md) records the tiled
+kernel, full tests, two 750-measurement captures, and the negative result. The
+three candidate tiles regress against ikj on the primary and larger-square cases.
+The Step 7 baselines and evidence remain preserved.

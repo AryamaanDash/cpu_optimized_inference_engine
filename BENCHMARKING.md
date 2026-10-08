@@ -353,3 +353,40 @@ Each expanded capture retains 480 individual measurements. The summarizer adds
 `storage_bytes = 4*(M*K + K*N + M*N)` and `reference_B_stride_bytes = 4*N`
 while retaining CPU/real timing and variability. Storage is an allocation footprint,
 not an assertion that every byte is active in a particular cache.
+
+## Step 8 cache-blocking comparison
+
+The `blocking` suite measures the 15 preselected shapes in [CACHE_BLOCKING.md](CACHE_BLOCKING.md)
+for reference, ikj, and three blocked configurations. The wrappers call one runtime
+configurable kernel; tile setup and validation remain inside allocation-inclusive timing.
+There is no packing or extra tile-buffer allocation. Each full capture contains
+750 measurements at ten repetitions. Existing suites continue to select only the
+two historical implementations.
+
+```sh
+python3 scripts/run_benchmarks.py --suite blocking \
+  --warmup 1 --min-time 1 --repetitions 10 --prevent-idle-sleep \
+  --implementation-order reference-first --notes "Actual observed conditions"
+python3 scripts/run_benchmarks.py --suite blocking \
+  --warmup 1 --min-time 1 --repetitions 10 --prevent-idle-sleep \
+  --implementation-order ikj-first --notes "Actual observed conditions"
+```
+
+For this suite `ikj-first` reverses the entire default sequence, so the second
+capture starts with blocked_16_64_64 and ends with reference. Alternatively supply
+all five keys in an explicit comma-separated order. Invalid/duplicate/incomplete
+orders are rejected. The saved implementation order is authoritative.
+
+Implementation prefixes and tile dimensions are saved in the protocol. Validation
+and summaries read each capture's implementation and shape manifests, preserving
+Step 7 schema-v2 compatibility independently of the current candidate registry.
+Summaries include reference/variant and ikj/variant ratios, with values above one
+favoring the variant; the old reference/ikj CSV field remains for the Step 7 plot.
+
+```sh
+python3 scripts/summarize_benchmarks.py RUN_A RUN_B --csv /tmp/step8.csv
+```
+
+Retain raw repetitions, source snapshots, and all candidate outcomes. Avoid source
+edits or concurrent builds during collection: the collector rejects source changes
+and concurrent CPU work would interfere with the experiment.
