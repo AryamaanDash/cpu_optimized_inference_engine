@@ -19,6 +19,11 @@ IMPLEMENTATIONS = {
     "reference": "BM_MatmulReferenceAllocationIncluded",
     "ikj": "BM_MatmulIkjAllocationIncluded",
 }
+TILES = {"blocked_8_32_64": (8, 32, 64), "blocked_16_32_64": (16, 32, 64),
+         "blocked_16_64_64": (16, 64, 64)}
+BLOCKING_IMPLEMENTATIONS = {**IMPLEMENTATIONS, **{
+    key: f"BM_MatmulBlocked{bm}x{bk}x{bn}AllocationIncluded"
+    for key, (bm, bk, bn) in TILES.items()}}
 SHAPES = ((1, 1, 1), (32, 32, 32), (128, 128, 128), (256, 256, 256),
           (63, 65, 67), (1, 256, 256), (256, 256, 1))
 
@@ -27,13 +32,43 @@ WIDTHS = (1, 4, 16, 17, 64, 255, 256, 257, 512, 1024)
 MEMORY_ACCESS_SHAPES = tuple(shape for size in VECTOR_SIZES
                              for shape in ((1, size, size), (size, size, 1))) + tuple(
                                  (32, 256, width) for width in WIDTHS)
-SUITES = {"baseline": SHAPES, "memory-access": MEMORY_ACCESS_SHAPES}
+BLOCKING_SHAPES = ((32, 32, 32), (128, 128, 128), (256, 256, 256), (512, 512, 512),
+                   (63, 65, 67), (129, 257, 131)) + tuple(
+                       (32, 256, n) for n in (64, 255, 256, 257, 512, 1024)) + (
+                       (1, 1, 1), (1, 256, 256), (256, 256, 1))
+SUITES = {"baseline": SHAPES, "memory-access": MEMORY_ACCESS_SHAPES,
+          "blocking": BLOCKING_SHAPES}
 
 
-def validate_results(rows, repetitions, implementations=None, shapes=None):
+def validate_implementation_manifest(manifest):
+    if (not isinstance(manifest, dict) or not manifest
+            or any(not isinstance(k, str) or not k or not isinstance(v, str)
+                   or not re.fullmatch(r"[A-Za-z0-9_]+", v) for k, v in manifest.items())
+            or len(set(manifest.values())) != len(manifest)):
+        raise RuntimeError("Invalid implementation manifest")
+    return manifest
+
+
+def ordered_implementations(manifest, order):
+    if order in ("reference-first", "ikj-first"):
+        keys = list(manifest)
+        if order == "ikj-first":
+            keys.reverse()
+    else:
+        keys = order.split(",")
+    if len(keys) != len(set(keys)) or set(keys) != set(manifest):
+        raise ValueError("Implementation order must list every selected implementation exactly once")
+    return keys
+
+
+def validate_results(rows, repetitions, implementations=None, shapes=None, manifest=None):
     """Reject incomplete comparisons, duplicate repetitions, and invalid timings."""
-    implementations = tuple(IMPLEMENTATIONS if implementations is None else implementations)
-    names = {IMPLEMENTATIONS[key]: key for key in implementations}
+    manifest = validate_implementation_manifest(IMPLEMENTATIONS if manifest is None else manifest)
+    implementations = tuple(manifest if implementations is None else implementations)
+    if (not implementations or len(set(implementations)) != len(implementations)
+            or any(key not in manifest for key in implementations)):
+        raise RuntimeError("Invalid selected implementations")
+    names = {manifest[key]: key for key in implementations}
     shapes = tuple(tuple(shape) for shape in (SHAPES if shapes is None else shapes))
     if (not shapes or any(len(shape) != 3 or any(type(x) is not int or x <= 0 for x in shape)
                           for shape in shapes) or len(set(shapes)) != len(shapes)):
@@ -128,8 +163,8 @@ def main():
     parser.add_argument("--warmup", type=positive_seconds, default=0.5)
     parser.add_argument("--min-time", type=positive_seconds, default=1.0)
     parser.add_argument("--repetitions", type=int, default=5)
-    parser.add_argument("--implementation-order", choices=("reference-first", "ikj-first"),
-                        default="reference-first")
+    parser.add_argument("--implementation-order", default="reference-first",
+                        help="reference-first, ikj-first (reverse suite order), or comma-separated full order")
     parser.add_argument("--prevent-idle-sleep", action="store_true",
                         help="Hold a temporary caffeinate -i assertion during each benchmark process")
     parser.add_argument("--notes", default="User run conditions not reported")
@@ -140,9 +175,11 @@ def main():
         parser.error("This metadata collector currently supports macOS")
 
     shapes = SUITES[args.suite]
-    implementation_order = ["reference", "ikj"]
-    if args.implementation_order == "ikj-first":
-        implementation_order.reverse()
+    manifest = BLOCKING_IMPLEMENTATIONS if args.suite == "blocking" else IMPLEMENTATIONS
+    try:
+        implementation_order = ordered_implementations(manifest, args.implementation_order)
+    except ValueError as error:
+        parser.error(str(error))
     build = args.build_dir.resolve()
     commit = capture(["git", "rev-parse", "HEAD"])
     status = capture(["git", "status", "--porcelain=v1", "--untracked-files=all"])
@@ -172,7 +209,8 @@ def main():
             "warmup_seconds": args.warmup,
             "minimum_measurement_seconds": args.min_time,
             "repetitions": args.repetitions,
-            "implementations": IMPLEMENTATIONS,
+            "implementations": manifest,
+            "tiles_BM_BK_BN": {key: list(TILES[key]) for key in manifest if key in TILES},
             "shapes_M_K_N": [list(shape) for shape in shapes],
             "suite": args.suite,
             "implementation_order": implementation_order,
@@ -252,7 +290,7 @@ def main():
             metadata["implementation_captures"].append(record)
             launcher = ["/usr/bin/caffeinate", "-i"] if args.prevent_idle_sleep else []
             shape_pattern = "|".join(f"M:{m}/K:{k}/N:{n}" for m, k, n in shapes)
-            benchmark_filter = f"^{IMPLEMENTATIONS[implementation]}/({shape_pattern})$"
+            benchmark_filter = f"^{manifest[implementation]}/({shape_pattern})$"
             run([*launcher, str(binary), f"--benchmark_filter={benchmark_filter}",
                  f"--benchmark_min_warmup_time={args.warmup}",
                  f"--benchmark_min_time={args.min_time}s", f"--benchmark_repetitions={args.repetitions}",
@@ -263,14 +301,14 @@ def main():
             record["finished_at_utc"] = now()
             record["machine_after"] = machine_state()
             results = json.loads(result_path.read_text())
-            record.update(validate_results(results["benchmarks"], args.repetitions, [implementation], shapes))
+            record.update(validate_results(results["benchmarks"], args.repetitions, [implementation], shapes, manifest=manifest))
             record["results_file"] = result_path.name
             record["results_sha256"] = digest(result_path)
             combined["contexts"][implementation] = results["context"]
             combined["benchmarks"].extend(results["benchmarks"])
             save_metadata()
         metadata["machine_after"] = machine_state()
-        validation = validate_results(combined["benchmarks"], args.repetitions, shapes=shapes)
+        validation = validate_results(combined["benchmarks"], args.repetitions, shapes=shapes, manifest=manifest)
         metadata["measurement_rows"] = validation["measurement_rows"]
         metadata["protocol"]["case_order"] = validation["case_order"]
         (output / "results.json").write_text(json.dumps(combined, indent=2) + "\n")
