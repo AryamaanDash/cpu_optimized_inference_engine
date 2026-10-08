@@ -1,4 +1,5 @@
 #include "inference/matrix.hpp"
+#include <algorithm>
 #include <stdexcept>
 #include <utility>
 
@@ -104,6 +105,41 @@ Matrix matmul_ikj(const Matrix& a, const Matrix& b){
                 }
             }
         }
+    return result;
+}
+
+Matrix matmul_blocked(const Matrix& a, const Matrix& b, MatmulTiles tiles) {
+    if (a.cols() != b.rows()) {
+        throw std::invalid_argument("Columns of first matrix must match rows of second matrix");
+    }
+    if (tiles.bm == 0 || tiles.bk == 0 || tiles.bn == 0) {
+        throw std::invalid_argument("Tile dimensions must be positive");
+    }
+    const auto m = a.rows(), k_size = a.cols(), n = b.cols();
+    Matrix result(m, n);
+    if (m == 0 || n == 0 || k_size == 0) {
+        return result;
+    }
+    for (std::size_t ii = 0; ii < m; ) {
+        const auto i_end = ii + std::min(tiles.bm, m - ii);
+        for (std::size_t jj = 0; jj < n; ) {
+            const auto j_end = jj + std::min(tiles.bn, n - jj);
+            for (std::size_t kk = 0; kk < k_size; ) {
+                const auto k_end = kk + std::min(tiles.bk, k_size - kk);
+                for (std::size_t i = ii; i < i_end; ++i) {
+                    for (std::size_t k = kk; k < k_end; ++k) {
+                        const float a_value = a(i, k);
+                        for (std::size_t j = jj; j < j_end; ++j) {
+                            result(i, j) += a_value * b(k, j);
+                        }
+                    }
+                }
+                kk = k_end;
+            }
+            jj = j_end;
+        }
+        ii = i_end;
+    }
     return result;
 }
 }

@@ -39,6 +39,16 @@ private:
 Matrix matmul_reference(const Matrix& a, const Matrix& b);
 
 Matrix matmul_ikj(const Matrix& a, const Matrix& b);
+
+struct MatmulTiles {
+    std::size_t bm;
+    std::size_t bk;
+    std::size_t bn;
+};
+
+// Fresh zero-initialized output; inputs may be the same Matrix.
+// Rejects incompatible shapes and zero tile dimensions, including empty inputs.
+Matrix matmul_blocked(const Matrix& a, const Matrix& b, MatmulTiles tiles);
 }
 
 #endif // MATRIX_HPP
